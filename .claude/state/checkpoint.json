@@ -1,53 +1,58 @@
 {
-  "task_id": "setup-v6-rerun",
-  "phase": "P1-skeleton",
-  "status": "complete",
+  "task_id": "p2-engine-backend",
+  "phase": "P2-engine (partial)",
+  "status": "backend serving the real engine; P2 remainder not started",
   "project": "DAARI (Team ASURA), repo asura",
   "spec_version": "DAARI_BUILD_PLAN.md v6, 18 Sep 2026",
   "updated": "2026-09-18",
   "files_touched": [
-    "CLAUDE.md (rewritten to v6 §5.1, 13 non-negotiables)",
-    ".claude/rules/{core,api,web,data,safety}.md (v6 sections appended)",
-    ".claude/agents/{builder,designer,red-team}.md (removed the broken `tools:` line)",
-    ".claude/agents/{planner,reviewer}.md (planner +Bash; reviewer = seven modules)",
-    ".claude/commands/{go,demo,audit}.md (v6)",
-    ".claude/settings.json (+huggingface-cli)",
-    ".env.example (+DATAGOV_KEY, expected key lengths)",
-    ".gitignore (+.playwright-mcp/)",
-    "docs/CONSTITUTION.md (new, 13 articles)",
-    "docs/STATE.md, docs/DECISIONS.md (D9-D16)",
-    "packages/core/** (pyproject, daari_core/{__init__,telemetry}.py, 4 test files + violating fixture)",
-    "apps/api/** (pyproject, daari/{config,db,main}.py, alembic baseline, tests/test_health.py)",
-    "apps/web/** (next-intl en/te/hi, styles/tokens.css, [locale] route, proxy.ts, 2 unit tests, 4 screenshots)"
+    "packages/core/daari_core/roadmap.py (new)",
+    "packages/core/daari_core/match.py (new)",
+    "packages/core/tests/test_roadmap.py, test_match.py (new)",
+    "apps/api/daari/routes.py, taxonomy_loader.py, leads.py (new)",
+    "apps/api/daari/main.py (+CORS, +router), config.py (+CORS_ORIGINS), pyproject.toml (+pyyaml==6.0.3)",
+    "apps/api/tests/test_routes.py (new)",
+    "data/leads/seed_jobs.yaml, data/personas/personas.yaml (new)",
+    "docs/STATE.md, docs/DECISIONS.md (D19, D20)"
   ],
   "commands_run": [
-    {"cmd": "packages/core: uv run pytest -q", "exit": 0, "evidence": "5 passed, 1 skipped"},
-    {"cmd": "apps/api: uv run pytest -q", "exit": 0, "evidence": "6 passed (3 are the new ollama-probe regressions)"},
-    {"cmd": "apps/api: uv run alembic upgrade head", "exit": 0, "evidence": "pg_extension shows vector 0.8.6"},
-    {"cmd": "curl localhost:8000/health", "exit": 0, "evidence": "ok=true in 916ms; adzuna http_401, serpapi null, ollama model_not_pulled"},
-    {"cmd": "apps/web: pnpm build | typecheck | test | lint", "exit": 0, "evidence": "green on TypeScript 7.0.2; 3/3 unit tests"},
-    {"cmd": "curl localhost:3000 and /te", "exit": 0, "evidence": "307->/en 'DAARI · online'; /te 'దారి · ఆన్‌లైన్' in Noto Telugu"},
-    {"cmd": "ruff check (core, api) / biome lint (web)", "exit": 0, "evidence": "all checks passed"},
-    {"cmd": "hooktest.py (20 cases)", "exit": 0, "evidence": "20/20 - 10 blocked, 10 allowed"},
-    {"cmd": "grep model in subagents/*.jsonl", "exit": 0, "evidence": "claude-sonnet-5 on both - routing check PASS"},
-    {"cmd": "live probes: gemini, groq, nominatim, remotive, myscheme v6, adzuna, serpapi", "exit": 0, "evidence": "DECISIONS D9-D11"}
+    {
+      "cmd": "git push -u origin main",
+      "exit": 0,
+      "evidence": "a264545..e344b59; remote tree has zero nadi paths"
+    },
+    {
+      "cmd": "packages/core: uv run pytest -q",
+      "exit": 0,
+      "evidence": "63 passed, 1 skipped"
+    },
+    {
+      "cmd": "apps/api: uv run pytest -q",
+      "exit": 0,
+      "evidence": "25 passed"
+    },
+    {
+      "cmd": "ruff check (core, api)",
+      "exit": 0,
+      "evidence": "All checks passed"
+    },
+    {
+      "cmd": "uvicorn daari.main:app --port 8010 + smoke.py",
+      "exit": 0,
+      "evidence": "roadmap/learn/shock/match/evidence all 200 against a live process"
+    }
   ],
   "evidence": {
-    "health_ok": true,
-    "health_red_fields": ["adzuna (http_401)", "serpapi_budget_left (null)"],
-    "health_skipped_fields": ["llm[ollama] (model_not_pulled)"],
-    "web_exit_criterion": "met (en + te)",
-    "env_file_present": true,
-    "env_keys_filled": "19 of 23; empty are deploy-only: HF_SPACE_ID, HF_TOKEN, PROD_DATABASE_URL, PROD_REDIS_URL",
-    "groq_chat_model": "openai/gpt-oss-120b (Llama 3.3/4 no longer served)",
-    "myscheme_endpoint": "api.myscheme.gov.in/search/v6/schemes (v4, v5 return 500)",
-    "redis_pin": "5.3.1 (arq 0.28.0 requires redis[hiredis]<6)",
-    "containers": "daari-postgres 17.11 + daari-redis 7, both healthy",
-    "ollama_models_pulled": [],
-    "agent_definitions_fixed_but_cached": true
+    "priya_roadmap": "310h / 31 weeks / 10 steps -> Data Analyst",
+    "ravi_roadmap": "150h / 15 weeks / 14 steps -> Delivery Executive",
+    "learn_sql_diff": "310h -> 270h, cause=learner, removed=[sql_querying]",
+    "market_shock": "requested 50x -> applied 2.0x clamped; python moved 13 -> 7; cause=market",
+    "evidence_counters": "student and rural both non-zero against one daari_core",
+    "leads": "10 seed listings, is_live=false, every card stamped",
+    "remote_in_sync": true
   },
   "blockers": [
-    "ADZUNA_APP_KEY is 31 chars (Adzuna issues 32) and SERPAPI_KEY is 63 (SerpAPI issues 64); both 401. Adzuna is required for P3 demand weights. Human must re-paste into .env; Claude Code never edits it."
+    "ADZUNA_APP_KEY (31 chars, needs 32) and SERPAPI_KEY (63, needs 64) still 401. Blocks live leads + real demand weights in P3, not the engine."
   ],
   "human_todo": [
     "Re-paste ADZUNA_APP_KEY and SERPAPI_KEY",
@@ -58,5 +63,10 @@
     "Bring one redacted placement notice",
     "Data-lane review of the te/hi strings"
   ],
-  "next_action": "/go - planner writes docs/superpowers/plans/phase-2-engine.md from the P2 row of DAARI_BUILD_PLAN.md §13 (graph, vectors, matcher, roadmap + Before | After, CAT, tool registry), acceptance tests first."
+  "next_action": "/go - planner writes docs/superpowers/plans/phase-2-engine.md for the P2 remainder (CAT, demand, eligibility, scam, tool registry); the roadmap+match half is done and pushed.",
+  "deferred_to_go": [
+    "P2 remainder: assess.py (Rasch CAT), demand.py (PMI), eligibility.py, scam.py, agent tool registry.",
+    "Seed listings' required_skills levels are copied from each skill node's own level; set them per listing (data lane) \u2014 see DECISIONS D19.",
+    "apps/api runs on 8010 during this session; :8000 still holds the older standalone demo/backend. Decide which owns 8000 before the pitch."
+  ]
 }

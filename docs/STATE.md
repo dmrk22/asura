@@ -4,6 +4,32 @@ Spec: `DAARI_BUILD_PLAN.md` **v6, 18 Sep 2026**. Build order + cut lines: §13. 
 Updated 2026-09-18 by `/setup` (re-run against v6).
 
 ## Now
+**P2 partial — the backend serves the real engine. Roadmap, Before | After, Market shock and the matcher are live over HTTP.**
+
+Added 2026-09-18 ~04:00, after the remote was found to be 9 commits stale (see below):
+
+| What | Where | Proven by |
+|---|---|---|
+| `roadmap.compute` + `diff` — demand-weighted priority-queue Kahn | `packages/core/daari_core/roadmap.py` | 18 tests incl. the three §7.3 invariants as hypothesis properties |
+| `match` — level-aware coverage, closure gap cost, all four components returned | `packages/core/daari_core/match.py` | 21 tests |
+| `GET /taxonomy`, `GET /personas`, `POST /roadmap`, `POST /roadmap/learn`, `POST /roadmap/shock`, `POST /match`, `GET /evidence` | `apps/api/daari/routes.py` | 19 route tests + a live smoke against a running server |
+| Seed listings + personas as **stamped data, not code literals** | `data/leads/seed_jobs.yaml`, `data/personas/personas.yaml` | every card carries `source`/`source_url`/`fetched_at`/`is_live:false` |
+
+Gate run 2026-09-18: **core 63 passed / 1 skipped · api 25 passed · ruff clean both.**
+
+Live numbers from a running server (not asserted — measured):
+- Priya → Data Analyst: **310 h, 31 weeks at 10 h/wk**, 10 steps.
+- Ravi → Delivery Executive: **150 h, 15 weeks**, 14 steps.
+- "I learned SQL" → 310 h → 270 h, `cause: learner`, `removed: [sql_querying]`.
+- Market shock on Python at a requested 50× → **applied 2.0× (clamped, and the response says so)**; Python moves 13 → 7, `cause: market`, `hours_delta: 0`.
+- `/evidence` shows both personas' counters moving against one `daari_core`.
+
+**Open — needs a human call (see DECISIONS D19):** the §7.2 additive formula let a 0 %-coverage nearby listing top Priya's matches. Fixed with a *relevance floor* (a zero-coverage candidate never outranks a positive-coverage one); the published weights are untouched. Priya's top match is now Store Cashier at 25 % coverage — honest, but it is a retail job heading a data-analyst's list. If that reads badly on stage, the fix is better seed listings or level-aware job requirements, not a re-weighting.
+
+**Still not built (P2 remainder):** `assess.py` (Rasch CAT), `demand.py` (PMI from live listings), `eligibility.py`, `scam.py`, the tool registry, and the live fetchers. The demand input exists and is honoured end to end; nothing computes it from real listings yet.
+
+---
+
 **P1 Skeleton + Constitution scaffold — done. The `/setup` exit criterion is met.**
 
 P1 gate (§5.4, verbatim): *`http://localhost:8000/health` returns `{sha, db, redis, llm:[…], tools, asr: groq, tts: edge, adzuna, myscheme, nominatim, serpapi_budget_left}` and `http://localhost:3000` renders "DAARI · online" in en and te.*

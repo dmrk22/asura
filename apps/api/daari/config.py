@@ -44,6 +44,16 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     DEFAULT_DISTRICT: str = "Guntur"
 
+    # Browser origins allowed to call this API. Comma-separated in .env.
+    # Defaults cover the Next.js dev server and the offline demo frontend —
+    # an explicit list, never "*", so a deployed build is not callable from
+    # any page on the internet.
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
     def __repr_args__(self):
         """Both __repr__ and __str__ derive from this in pydantic v2 — keep it secret-free."""
         return [("app_env", self.APP_ENV)]

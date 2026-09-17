@@ -130,3 +130,19 @@ The first `/health` body reported `{"provider":"ollama","model":"llama3.1:8b","s
 The probe now parses the tag list and reports `skipped: model_not_pulled` unless the configured model is actually present (matching `llama3.1:8b` and a bare `llama3.1:latest` pull alike). Three regression tests in `apps/api/tests/test_health.py` cover empty list, model present, and bare-tag pull. Live body now reads `"status": "skipped", "detail": "model_not_pulled"`.
 
 The general rule, since `/health` is what the P1 gate and the pitch both rely on: **a probe reports the capability, not the connection.** Reachable, authenticated and usable are three different facts.
+
+## D19 · 2026-09-18 · A relevance floor on the matcher; §7.2's weights left alone
+The §7.2 score is additive: `0.5*coverage - 0.25*gap + 0.15*fit + 0.10*demand`. With a real profile and the seed listings that let a listing the learner matches **nothing** of head the results — Priya's top match was "Retail Sales Associate" at `coverage = 0.00`, winning on `constraint_fit = 1.0` (same city) plus a small `gap_cost` (short, cheap role). The arithmetic is right; presenting it as the top *match* is not, and it is the first thing a judge would poke.
+
+Rejected: re-weighting the formula, or making `fit`/`demand` multiplicative. Both change a number the plan publishes and would need re-justifying on stage.
+
+**Decided:** an ordering rule in `daari_core.match.match()` — sort by `(coverage <= 0, -score, id)`. A zero-coverage candidate never outranks a positive-coverage one; within each block, score decides. Every published weight and every returned component is byte-identical to before; only the order changes. Three regression tests pin it, including one asserting the §7.2 arithmetic still holds exactly.
+
+Zero-coverage candidates are **demoted, not hidden** — a learner with no matches still deserves to see the closest attainable work.
+
+**Residual, honest:** Priya's top match is now "Store Cashier" at 25 % coverage (she has the numeracy it needs). That is truthful but reads oddly for a data-analyst persona. The real cause is the seed listings' `required_skills` levels being copied from each skill node's own level rather than being set per listing. Fix that in the data lane, not in the scorer.
+
+## D20 · 2026-09-18 · The remote was 9 commits behind; nothing had ever been pushed
+GitHub still showed the previous NADI project because `main` had never been pushed — `/setup` committed locally and deliberately did not push (D1 recorded the commit, not a push). `git rev-list --left-right --count origin/main...HEAD` read `0 9`. Pushed on the user's explicit instruction after checking that `.env` is untracked and no key-shaped literal exists in any tracked file. `gh api .../git/trees/main?recursive=1` filtered for `nadi` now returns empty.
+
+**Rule going forward:** `/setup` and `/go` push after a green gate. A local-only commit is invisible to a teammate and to the judge reading the repo.

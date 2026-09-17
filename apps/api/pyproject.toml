@@ -23,6 +23,7 @@ dependencies = [
     "pgvector==0.5.0",
     "greenlet==3.5.6",
     "edge-tts==7.2.8",
+    "pyyaml==6.0.3",
     "daari-core",
 ]
 
