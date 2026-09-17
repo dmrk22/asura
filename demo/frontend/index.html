@@ -27,15 +27,9 @@
     --font-mono: "Geist Mono", ui-monospace, monospace;
     --font-telugu: "Noto Sans Telugu", sans-serif;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bone: oklch(0.18 0.01 60);
-      --ink: oklch(0.965 0.006 85);
-      --background: var(--bone);
-      --foreground: var(--ink);
-      --shadow-hairline: 0 1px 4px oklch(0.965 0.006 85 / 0.08);
-    }
-  }
+  /* Tonight's demo is fixed light/"paper" — no dark-mode auto-flip, so it
+     always renders the same regardless of the viewer's OS theme. */
+  html { color-scheme: light only; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
   * { box-sizing: border-box; }
