@@ -23,6 +23,8 @@ Run `/go` to start. It reads this file, the phase plan and `git log -10` first.
 | Slash commands | `/go /lane /demo /audit /ship` registered and listed by the harness |
 | MCP | Context7 answered a live query; Playwright available via plugin |
 | Versions | pinned from the registry at setup, not memory — see DECISIONS.md |
+| CI on GitHub | run 35235735902 on `main` — **web ✓ api ✓ evals ✓** |
+| Repo | github.com/dmrk22/asura (private), `main` pushed |
 
 `llm` shows only `cache` because `.env` does not exist yet. It will list `gemini` / `groq` once keys are in.
 

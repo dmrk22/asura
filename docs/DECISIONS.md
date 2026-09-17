@@ -48,3 +48,15 @@ them from `git clone` alone. Local duplication is harmless; a teammate without t
 Vercel and Hugging Face CLIs are absent, and both need an interactive browser login that Claude Code
 cannot perform. Deploy is optional (plan §10, cut line 8) and scheduled for hour 11:30. The laptop demo
 is the primary. Install and login are human to-dos in STATE.md; `/ship` skips deploy if the values are blank.
+
+### D7 — No notification integration; nothing to send
+`/setup` step 8 sends a "setup complete" message to a configured Telegram/Slack target.
+`NADI_BUILD_PLAN.md` configures none — no webhook, no chat id, no bot token anywhere in the spec,
+and none in `.env.example`. Step 8 is a no-op, not a blocked step. If one is wanted later, say which
+service and I will add the key to `.env.example` and the call to `scripts/`.
+
+### D8 — CI proven green on the bootstrap commit
+Run 35235735902 on `main`: web 40s, api 40s, evals 35s — all pass.
+The `evals` job intentionally exits 0 while `evals/run.py` does not exist (it lands in P2); from P2 on it
+is the gate that blocks a merge on a red safety eval. One annotation, not an error:
+`pnpm/action-setup@v4` targets Node 20 and is forced onto Node 24 by the runner. Harmless; left alone.
