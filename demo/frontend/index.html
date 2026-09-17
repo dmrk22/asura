@@ -4,149 +4,161 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DAARI — offline demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Noto+Sans+Telugu:wght@400;500&display=swap" rel="stylesheet" />
 <style>
+  /* Tokens verbatim from apps/web/styles/tokens.css / docs/UI_BRIEF.md */
   :root {
-    --bg: #0f1115;
-    --panel: #171a21;
-    --panel-2: #1e2229;
-    --border: #2a2f3a;
-    --text: #e8eaee;
-    --muted: #9aa1ad;
-    --accent: #4f8cff;
-    --good: #35c98f;
-    --bad: #ff6b6b;
-    --warn: #f2b84b;
+    --bone: oklch(0.965 0.006 85);
+    --ink: oklch(0.18 0.01 60);
+    --graphite: oklch(0.42 0.01 60);
+    --signal: oklch(0.62 0.2 30);
+    --sage: oklch(0.68 0.08 150);
+    --amber: oklch(0.78 0.15 80);
+    --background: var(--bone);
+    --foreground: var(--ink);
+    --shadow-hairline: 0 1px 4px oklch(0.18 0.01 60 / 0.08);
+    --font-display: "Instrument Serif", serif;
+    --font-ui: "Geist", -apple-system, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, monospace;
+    --font-telugu: "Noto Sans Telugu", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bone: oklch(0.18 0.01 60);
+      --ink: oklch(0.965 0.006 85);
+      --background: var(--bone);
+      --foreground: var(--ink);
+      --shadow-hairline: 0 1px 4px oklch(0.965 0.006 85 / 0.08);
+    }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: var(--font-ui);
+    background: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "tnum" 1;
   }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
   header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid color-mix(in oklch, var(--graphite) 25%, transparent);
+    display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 16px;
   }
-  header h1 { font-size: 18px; margin: 0; letter-spacing: 0.02em; }
-  header h1 span { color: var(--muted); font-weight: 400; }
-  .personas { display: flex; gap: 8px; }
-  .persona-btn {
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
+  .wordmark { font-family: var(--font-display); font-style: italic; font-size: 34px; letter-spacing: 0.01em; }
+  .tagline { font-size: 13px; color: var(--graphite); margin-left: 12px; }
+  nav.personas { display: flex; gap: 22px; }
+  .persona-tab {
+    background: none; border: none; font-family: var(--font-ui); font-size: 14px; font-weight: 500;
+    color: var(--graphite); cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent;
   }
-  .persona-btn.active { border-color: var(--accent); background: rgba(79,140,255,0.15); }
-  main { padding: 24px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
-  section.panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
-  }
-  section.panel h2 { margin: 0 0 4px; font-size: 15px; }
-  .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 14px; }
-  .goal-line { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
-  .goal-line b { color: var(--text); }
-  ol.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-  ol.steps li {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px;
-  }
+  .persona-tab.active { color: var(--foreground); border-bottom-color: var(--signal); }
+
+  main { padding: 28px 32px; max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 20px 16px; } }
+
+  section.panel { border: 1px solid color-mix(in oklch, var(--graphite) 20%, transparent); border-radius: 4px; padding: 22px; box-shadow: var(--shadow-hairline); }
+  .panel-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .panel-head h2 { font-family: var(--font-display); font-style: italic; font-size: 22px; margin: 0; font-weight: 400; }
+  .panel-sub { color: var(--graphite); font-size: 12.5px; margin-bottom: 16px; }
+  .goal-line { font-size: 13px; color: var(--graphite); margin-bottom: 16px; }
+  .goal-line b { color: var(--foreground); font-weight: 500; }
+
+  ol.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  ol.steps li { display: flex; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid color-mix(in oklch, var(--graphite) 12%, transparent); }
   ol.steps li .n {
-    width: 22px; height: 22px; border-radius: 999px;
-    background: var(--accent); color: white; font-size: 12px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 11px; width: 20px; height: 20px; border-radius: 50%;
+    border: 1px solid var(--signal); color: var(--signal); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  ol.steps li .name { flex: 1; font-size: 13.5px; }
-  ol.steps li .hours { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-  .total-row { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
-  .total-row b { color: var(--text); font-variant-numeric: tabular-nums; }
+  ol.steps li .names { flex: 1; }
+  ol.steps li .name-en { font-size: 13.5px; }
+  ol.steps li .name-te { font-family: var(--font-telugu); font-size: 11.5px; color: var(--graphite); margin-top: 1px; }
+  ol.steps li .hours { font-family: var(--font-mono); font-size: 12.5px; color: var(--graphite); }
+
+  .total-row { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid color-mix(in oklch, var(--graphite) 20%, transparent); font-size: 13px; color: var(--graphite); }
+  .total-row b { font-family: var(--font-mono); color: var(--foreground); font-size: 15px; }
+
   button.learn {
-    margin-top: 14px; width: 100%; padding: 11px; border-radius: 8px; border: none;
-    background: var(--accent); color: white; font-size: 13.5px; cursor: pointer; font-weight: 600;
+    margin-top: 16px; width: 100%; padding: 12px; border-radius: 3px; border: 1px solid var(--signal);
+    background: var(--signal); color: var(--bone); font-size: 13.5px; cursor: pointer; font-weight: 500; font-family: var(--font-ui);
   }
-  button.learn:disabled { background: var(--panel-2); color: var(--muted); cursor: default; }
-  .diff-box { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 14px; }
-  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .diff-col h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px; }
-  .diff-col .step { font-size: 12.5px; padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; background: var(--panel-2); }
-  .diff-col .step.removed { text-decoration: line-through; color: var(--bad); background: rgba(255,107,107,0.1); }
-  .diff-col .step.reordered { border-left: 3px solid var(--warn); }
-  .diff-summary { margin-top: 12px; font-size: 13px; display: flex; gap: 16px; flex-wrap: wrap; }
-  .diff-summary .metric b { color: var(--good); font-variant-numeric: tabular-nums; }
-  .job {
-    background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px; margin-bottom: 10px;
-  }
+  button.learn:disabled { background: none; color: var(--graphite); border-color: color-mix(in oklch, var(--graphite) 30%, transparent); cursor: default; }
+
+  .diff-box { margin-top: 18px; border-top: 1px dashed color-mix(in oklch, var(--graphite) 30%, transparent); padding-top: 16px; }
+  .diff-cause { font-family: var(--font-mono); font-size: 10.5px; color: var(--graphite); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .diff-col h3 { font-family: var(--font-mono); font-size: 10.5px; color: var(--graphite); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px; }
+  .diff-col .step { font-size: 12px; padding: 5px 0; border-bottom: 1px solid color-mix(in oklch, var(--graphite) 10%, transparent); }
+  .diff-col .step .hrs { font-family: var(--font-mono); color: var(--graphite); }
+  .diff-col .step.removed { text-decoration: line-through; color: var(--graphite); opacity: 0.55; }
+  .diff-col .step.reordered { color: var(--signal); }
+  .diff-summary { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 12.5px; color: var(--graphite); }
+  .diff-summary b { font-family: var(--font-mono); color: var(--sage); font-size: 16px; }
+
+  .job { padding: 13px 0; border-bottom: 1px solid color-mix(in oklch, var(--graphite) 15%, transparent); }
+  .job:last-child { border-bottom: none; }
   .job-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .job-top .title { font-size: 13.5px; font-weight: 600; }
-  .job-top .score { font-variant-numeric: tabular-nums; font-size: 13px; }
-  .job .company { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-  .bar { height: 5px; border-radius: 999px; background: var(--border); margin: 8px 0; overflow: hidden; }
-  .bar div { height: 100%; background: var(--good); }
-  .skills-line { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
-  .skills-line b { color: var(--bad); font-weight: 500; }
-  .provenance { font-size: 11px; color: var(--muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
-  .provenance a { color: var(--accent); text-decoration: none; }
-  .empty { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+  .job-top .title { font-size: 13.5px; font-weight: 500; }
+  .job-top .score { font-family: var(--font-mono); font-size: 13px; }
+  .job .company { color: var(--graphite); font-size: 12px; margin-top: 2px; }
+  .bar { height: 3px; background: color-mix(in oklch, var(--graphite) 15%, transparent); margin: 9px 0 8px; overflow: hidden; }
+  .bar div { height: 100%; background: var(--sage); }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .chip { font-size: 10.5px; padding: 2px 7px; border-radius: 3px; }
+  .chip.amber { background: color-mix(in oklch, var(--amber) 30%, transparent); color: color-mix(in oklch, var(--amber) 65%, var(--ink)); }
+  .chip.sage { background: color-mix(in oklch, var(--sage) 25%, transparent); color: color-mix(in oklch, var(--sage) 60%, var(--ink)); }
+  .provenance { font-family: var(--font-mono); font-size: 10.5px; color: var(--graphite); margin-top: 8px; }
+  .provenance a { color: var(--graphite); text-decoration: underline; }
+  .empty { color: var(--graphite); font-size: 13px; padding: 24px 0; text-align: center; }
+  .score-note { font-size: 10.5px; color: var(--graphite); margin-top: 14px; border-top: 1px dashed color-mix(in oklch, var(--graphite) 25%, transparent); padding-top: 10px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>DAARI <span>· offline localhost demo</span></h1>
-  <div class="personas" id="personas"></div>
+  <div><span class="wordmark">DAARI</span><span class="tagline">One path engine. Two worlds. — offline localhost demo</span></div>
+  <nav class="personas" id="personas"></nav>
 </header>
 
 <main>
   <section class="panel">
-    <h2>Roadmap</h2>
-    <div class="sub">Recomputed live from the skill graph — nothing here is faked.</div>
+    <div class="panel-head"><h2>Path</h2></div>
+    <div class="panel-sub">Recomputed live from the sourced skill graph (data/taxonomy) — nothing here is faked.</div>
     <div class="goal-line" id="goalLine"></div>
     <ol class="steps" id="steps"></ol>
-    <div class="total-row"><span>Total hours remaining</span><b id="totalHours"></b></div>
+    <div class="total-row"><span>Total hours remaining</span><b id="totalHours" class="mono"></b></div>
     <button class="learn" id="learnBtn"></button>
     <div class="diff-box" id="diffBox" style="display:none"></div>
   </section>
 
   <section class="panel">
-    <h2>Local job matches</h2>
-    <div class="sub">Seeded listings — offline demo data, not live-fetched tonight.</div>
+    <div class="panel-head"><h2>Leads</h2></div>
+    <div class="panel-sub">Seeded listings — offline placeholder data, not live-fetched tonight.</div>
     <div id="jobs"></div>
+    <div class="score-note">Match % is a plain coverage ratio for tonight's demo — the full <span class="mono">coverage / gap / fit / demand</span> component breakdown (§7.3) isn't wired up yet.</div>
   </section>
 </main>
 
 <script>
 const API = "http://localhost:8000";
-const ACRONYMS = new Set(["sql", "gps", "pos"]);
+let profiles = {}, taxonomy = { skills: {}, roles: {} };
+let currentId = null, held = [], goal = null;
 
-function label(id) {
-  return id.split("_").map(w => ACRONYMS.has(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)).join(" ");
-}
-
-let profiles = {};
-let currentId = null;
-let held = [];
-let goal = null;
+function skillLabel(id) { return (taxonomy.skills[id] || {}).label_en || id; }
+function skillLabelTe(id) { return (taxonomy.skills[id] || {}).label_te || ""; }
+function roleLabel(id) { return (taxonomy.roles[id] || {}).label_en || id; }
 
 async function init() {
-  profiles = await fetch(`${API}/profiles`).then(r => r.json());
-  const personaWrap = document.getElementById("personas");
-  personaWrap.innerHTML = Object.entries(profiles).map(([id, p]) =>
-    `<button class="persona-btn" data-id="${id}">${p.name}</button>`
+  [profiles, taxonomy] = await Promise.all([
+    fetch(`${API}/profiles`).then(r => r.json()),
+    fetch(`${API}/taxonomy`).then(r => r.json()),
+  ]);
+  const nav = document.getElementById("personas");
+  nav.innerHTML = Object.entries(profiles).map(([id, p]) =>
+    `<button class="persona-tab" data-id="${id}">${p.name}</button>`
   ).join("");
-  personaWrap.querySelectorAll(".persona-btn").forEach(btn =>
+  nav.querySelectorAll(".persona-tab").forEach(btn =>
     btn.addEventListener("click", () => selectPersona(btn.dataset.id))
   );
   selectPersona(Object.keys(profiles)[0]);
@@ -156,9 +168,7 @@ function selectPersona(id) {
   currentId = id;
   held = [...profiles[id].held];
   goal = profiles[id].goal;
-  document.querySelectorAll(".persona-btn").forEach(b =>
-    b.classList.toggle("active", b.dataset.id === id)
-  );
+  document.querySelectorAll(".persona-tab").forEach(b => b.classList.toggle("active", b.dataset.id === id));
   document.getElementById("diffBox").style.display = "none";
   loadRoadmap();
   loadJobs();
@@ -166,44 +176,44 @@ function selectPersona(id) {
 
 async function loadRoadmap() {
   const rm = await fetch(`${API}/roadmap`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ profile: held, goal }),
   }).then(r => r.json());
 
   document.getElementById("goalLine").innerHTML =
-    `Goal: <b>${label(goal)}</b> &middot; ${held.length} skill(s) already held`;
+    `Goal: <b>${roleLabel(goal)}</b> &middot; <span class="mono">${held.length}</span> skill(s) already held`;
 
   const stepsEl = document.getElementById("steps");
+  const btn = document.getElementById("learnBtn");
   if (rm.steps.length === 0) {
-    stepsEl.innerHTML = "";
+    stepsEl.innerHTML = `<div class="empty">Goal already reached — every required skill is held.</div>`;
     document.getElementById("totalHours").textContent = "0h";
-    const empty = document.createElement("div");
-    empty.className = "empty";
-    empty.textContent = "Goal already reached — every required skill is held.";
-    stepsEl.replaceWith(empty);
-    document.getElementById("learnBtn").style.display = "none";
+    btn.style.display = "none";
     return;
   }
-  stepsEl.innerHTML = rm.steps.map((s, i) =>
-    `<li><span class="n">${i + 1}</span><span class="name">${label(s.skill)}</span><span class="hours">${s.hours}h</span></li>`
+  stepsEl.innerHTML = rm.steps.map((s, i) => `
+    <li>
+      <span class="n">${i + 1}</span>
+      <span class="names">
+        <div class="name-en">${skillLabel(s.skill)}</div>
+        ${skillLabelTe(s.skill) ? `<div class="name-te">${skillLabelTe(s.skill)}</div>` : ""}
+      </span>
+      <span class="hours">${s.hours}h</span>
+    </li>`
   ).join("");
   document.getElementById("totalHours").textContent = `${rm.total_hours}h`;
 
   const nextSkill = rm.steps[0].skill;
-  const btn = document.getElementById("learnBtn");
   btn.style.display = "block";
-  btn.textContent = `I learned "${label(nextSkill)}"`;
+  btn.textContent = `I learned "${skillLabel(nextSkill)}"`;
   btn.onclick = () => learnSkill(nextSkill);
 }
 
 async function learnSkill(skillId) {
   const diff = await fetch(`${API}/roadmap/learn`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ profile: held, goal, new_skill: skillId }),
   }).then(r => r.json());
-
   renderDiff(diff);
   held = [...held, skillId];
   await loadRoadmap();
@@ -215,7 +225,7 @@ function renderStepList(steps, removedSet, reorderedSet) {
     const classes = ["step"];
     if (removedSet.has(s.skill)) classes.push("removed");
     if (reorderedSet.has(s.skill)) classes.push("reordered");
-    return `<div class="${classes.join(" ")}">${label(s.skill)} · ${s.hours}h</div>`;
+    return `<div class="${classes.join(" ")}">${skillLabel(s.skill)} <span class="hrs mono">${s.hours}h</span></div>`;
   }).join("");
 }
 
@@ -225,39 +235,34 @@ function renderDiff(diff) {
   const box = document.getElementById("diffBox");
   box.style.display = "block";
   box.innerHTML = `
+    <div class="diff-cause">cause: ${diff.cause}</div>
     <div class="diff-grid">
-      <div class="diff-col">
-        <h3>Before</h3>
-        ${renderStepList(diff.before.steps, removedSet, reorderedSet) || '<div class="empty">—</div>'}
-      </div>
-      <div class="diff-col">
-        <h3>After</h3>
-        ${renderStepList(diff.after.steps, new Set(), reorderedSet) || '<div class="empty">Goal reached</div>'}
-      </div>
+      <div class="diff-col"><h3>Before</h3>${renderStepList(diff.before.steps, removedSet, reorderedSet) || '<div class="empty">—</div>'}</div>
+      <div class="diff-col"><h3>After</h3>${renderStepList(diff.after.steps, new Set(), reorderedSet) || '<div class="empty">Goal reached</div>'}</div>
     </div>
     <div class="diff-summary">
-      <div class="metric">Hours saved: <b>${diff.hours_saved}h</b></div>
-      <div class="metric">Removed: <b>${diff.removed.length}</b></div>
-      <div class="metric">Reordered: <b>${diff.reordered.length}</b></div>
+      <div>Hours saved <br><b>${diff.hours_saved}h</b></div>
+      <div>Removed <br><b>${diff.removed.length}</b></div>
+      <div>Reordered <br><b>${diff.reordered.length}</b></div>
     </div>
   `;
 }
 
 async function loadJobs() {
   const jobs = await fetch(`${API}/jobs?skills=${encodeURIComponent(held.join(","))}`).then(r => r.json());
-  const el = document.getElementById("jobs");
-  el.innerHTML = jobs.map(j => `
+  document.getElementById("jobs").innerHTML = jobs.map(j => `
     <div class="job">
       <div class="job-top">
         <span class="title">${j.title}</span>
         <span class="score">${Math.round(j.match_score * 100)}%</span>
       </div>
-      <div class="company">${j.company} · ${j.location}</div>
+      <div class="company">${j.company} &middot; ${j.location}</div>
       <div class="bar"><div style="width:${j.match_score * 100}%"></div></div>
-      ${j.missing_skills.length
-        ? `<div class="skills-line">Missing: <b>${j.missing_skills.map(label).join(", ")}</b></div>`
-        : `<div class="skills-line">All required skills held</div>`}
-      <div class="provenance">${j.company} listing · fetched ${new Date(j.fetched_at).toLocaleString()} · <a href="${j.source_url}" target="_blank" rel="noopener">source (placeholder)</a></div>
+      <div class="chips">
+        ${j.matched_skills.map(s => `<span class="chip sage">${skillLabel(s)}</span>`).join("")}
+        ${j.missing_skills.map(s => `<span class="chip amber">${skillLabel(s)}</span>`).join("")}
+      </div>
+      <div class="provenance">${j.company} listing &middot; fetched ${new Date(j.fetched_at).toLocaleString()} &middot; <a href="${j.source_url}" target="_blank" rel="noopener">source (placeholder)</a></div>
     </div>
   `).join("");
 }

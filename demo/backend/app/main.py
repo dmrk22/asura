@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app.data import JOBS, PROFILES, SKILLS
+from app.data import JOBS, PROFILES, ROLES, SKILLS
 from app.engine import compute_roadmap, diff_roadmap, match_jobs
 
 # Stamped once at process start — every job in this demo shares one "fetched at"
@@ -40,12 +40,27 @@ class LearnRequest(BaseModel):
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "skills": len(SKILLS), "jobs": len(JOBS)}
+    return {"ok": True, "skills": len(SKILLS), "roles": len(ROLES), "jobs": len(JOBS)}
 
 
 @app.get("/profiles")
 def profiles() -> dict:
     return PROFILES
+
+
+@app.get("/taxonomy")
+def taxonomy() -> dict:
+    """Skill and role labels/sources — real, sourced data, not invented tonight."""
+    return {
+        "skills": {
+            sid: {"label_en": s["label_en"], "label_te": s["label_te"], "source": s["source"]}
+            for sid, s in SKILLS.items()
+        },
+        "roles": {
+            rid: {"label_en": r["label_en"], "label_te": r["label_te"], "source": r["source"]}
+            for rid, r in ROLES.items()
+        },
+    }
 
 
 @app.post("/roadmap")

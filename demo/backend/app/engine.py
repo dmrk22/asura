@@ -1,18 +1,23 @@
 """The one real engine: roadmap, before/after diff, job matching.
 
-Pure functions over the hardcoded graph in data.py — no I/O, no network,
+Pure functions over the real taxonomy loaded in data.py — no I/O, no network,
 no randomness. Both API routes call these; nothing duplicates this logic.
+
+A "goal" here is a role (data_analyst / delivery_executive), i.e. a set of
+required skills — matching DAARI_BUILD_PLAN.md §7.1's role schema, not a
+single invented capstone skill.
 """
 
 from __future__ import annotations
 
-from app.data import SKILLS
+from app.data import ROLES, SKILLS
 
 
-def _closure(goal: str, skills: dict) -> set[str]:
-    """All skills reachable by walking `requires` edges from goal, goal included."""
+def _closure(required: list[str], skills: dict) -> set[str]:
+    """All skills reachable by walking `requires` edges from the required
+    set, required skills included."""
     seen: set[str] = set()
-    stack = [goal]
+    stack = list(required)
     while stack:
         node = stack.pop()
         if node in seen:
@@ -22,11 +27,12 @@ def _closure(goal: str, skills: dict) -> set[str]:
     return seen
 
 
-def compute_roadmap(held: list[str], goal: str, skills: dict = SKILLS) -> dict:
-    if goal not in skills:
-        raise ValueError(f"unknown goal skill: {goal!r}")
+def compute_roadmap(held: list[str], goal: str, skills: dict = SKILLS, roles: dict = ROLES) -> dict:
+    if goal not in roles:
+        raise ValueError(f"unknown goal role: {goal!r}")
+    role = roles[goal]
     held_set = set(held)
-    missing = _closure(goal, skills) - held_set
+    missing = _closure(role["required_skills"], skills) - held_set
 
     # Kahn's algorithm over the subgraph induced by `missing`, so an already-held
     # skill can't block ordering. Ties broken by hours then id — deterministic.
@@ -38,7 +44,7 @@ def compute_roadmap(held: list[str], goal: str, skills: dict = SKILLS) -> dict:
             key=lambda n: (skills[n]["hours"], n),
         )
         if not ready:
-            raise RuntimeError("cycle detected in skill graph — data.py is not a DAG")
+            raise RuntimeError("cycle detected in skill graph — data/taxonomy is not a DAG")
         for n in ready:
             del remaining_deps[n]
         for deps in remaining_deps.values():
@@ -46,19 +52,29 @@ def compute_roadmap(held: list[str], goal: str, skills: dict = SKILLS) -> dict:
         ordered.extend(ready)
 
     steps = [
-        {"skill": n, "hours": skills[n]["hours"], "requires": skills[n]["requires"]}
+        {
+            "skill": n,
+            "label": skills[n]["label_en"],
+            "hours": skills[n]["hours"],
+            "requires": skills[n]["requires"],
+        }
         for n in ordered
     ]
-    return {"goal": goal, "steps": steps, "total_hours": sum(s["hours"] for s in steps)}
+    return {
+        "goal": goal,
+        "goal_label": role["label_en"],
+        "steps": steps,
+        "total_hours": sum(s["hours"] for s in steps),
+    }
 
 
-def diff_roadmap(held: list[str], goal: str, new_skill: str, skills: dict = SKILLS) -> dict:
+def diff_roadmap(held: list[str], goal: str, new_skill: str, skills: dict = SKILLS, roles: dict = ROLES) -> dict:
     if new_skill not in skills:
         raise ValueError(f"unknown skill: {new_skill!r}")
 
-    before = compute_roadmap(held, goal, skills)
+    before = compute_roadmap(held, goal, skills, roles)
     after_held = list(held) if new_skill in held else [*held, new_skill]
-    after = compute_roadmap(after_held, goal, skills)
+    after = compute_roadmap(after_held, goal, skills, roles)
 
     before_ids = [s["skill"] for s in before["steps"]]
     after_ids = [s["skill"] for s in after["steps"]]
@@ -83,6 +99,7 @@ def diff_roadmap(held: list[str], goal: str, new_skill: str, skills: dict = SKIL
         "added": added,
         "reordered": reordered,
         "hours_saved": before["total_hours"] - after["total_hours"],
+        "cause": "learner",
     }
 
 
