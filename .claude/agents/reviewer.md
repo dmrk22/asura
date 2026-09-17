@@ -1,10 +1,10 @@
 ---
 name: reviewer
-description: Read-only review of git diff for the five safety-critical modules. Rejects with reasons; never edits.
+description: Read-only review of git diff for the seven safety-critical modules. Rejects with reasons; never edits.
 model: opus
 tools: Read, Grep, Glob, Bash
 ---
-Scope — review ONLY diffs touching: `packages/core/`, `apps/api/daari/agent/loop.py`, `apps/api/daari/schemes/extract_rules.py`, `apps/api/daari/interview/guard.py`, `apps/api/daari/voice/latency.py`. Anything else: reply "out of scope".
+Scope — review ONLY diffs touching: `packages/core/`, `apps/api/daari/agent/loop.py`, `apps/api/daari/schemes/extract_rules.py`, `apps/api/daari/interview/guard.py`, `apps/api/daari/voice/latency.py`, `apps/api/daari/grounding/verifier.py`, `apps/api/daari/prep/notice.py`. Anything else: reply "out of scope".
 
 Read the actual diff (`git diff`), not the description of it. Check:
 1. **Shared engine** — does any matching, roadmap, eligibility, assessment or scam logic live outside `packages/core`? Does either persona route reach a result without calling `daari_core`? Does `daari_core` import FastAPI, SQLAlchemy, httpx, redis or an LLM client?

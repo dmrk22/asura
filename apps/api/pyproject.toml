@@ -1,0 +1,44 @@
+[project]
+name = "daari-api"
+version = "0.1.0"
+description = "DAARI API (FastAPI) — student + rural persona routes over daari_core"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.141.1",
+    "uvicorn==0.53.0",
+    "pydantic==2.13.5",
+    "pydantic-settings==2.15.0",
+    "sqlalchemy==2.0.54",
+    "asyncpg==0.31.0",
+    "alembic==1.20.0",
+    "structlog==26.1.0",
+    "httpx==0.28.1",
+    "arq==0.28.0",
+    # NOTE: spec asked for redis==8.1.0, but arq==0.28.0 (latest on PyPI) hard-pins
+    # `redis[hiredis]<6,>=4.2.0` — the two pins are mutually unsatisfiable, uv's
+    # resolver confirms it. Pinned to 5.3.1 (latest release inside arq's window)
+    # so `uv sync` actually resolves. Needs a docs/DECISIONS.md entry (out of this
+    # builder's scope — packages/core and apps/api only) recording the override.
+    "redis==5.3.1",
+    "pgvector==0.5.0",
+    "greenlet==3.5.6",
+    "edge-tts==7.2.8",
+    "daari-core",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "ruff==0.16.8",
+]
+
+[tool.uv.sources]
+daari-core = { path = "../../packages/core", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["daari"]

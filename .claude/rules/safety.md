@@ -23,3 +23,18 @@ Synthetic personas only — Ravi, Priya, blank. Real live leads, fake people. No
 ## CI gates, non-negotiable (§10)
 scheme precision@5 ≥ 0.8 · roadmap invariants pass · scam recall ≥ 0.9 · match ablation graph-on ≥ graph-off · feedback adversarial = 0 · must-mention recall ≥ 0.8 · voice first-audio p95 < 1.5 s and total p95 < 4 s on cached clips · CAT termination test passes.
 A red eval blocks every merge and every deploy.
+
+## 6. The Constitution is code, not a slide (v6, §7.13)
+`docs/CONSTITUTION.md` has 13 articles; each has a test. Every user-facing factual sentence passes `grounding/verifier.py` before rendering **and** before TTS. A sentence that fails is removed, not rephrased. Every number passes `constitution.check_numbers()`, every date `check_dates()`, every entity `check_names()`.
+
+## 7. Model memory is not a source
+Anything time-bound — jobs, schemes, questions, companies, dates, salaries, deadlines, eligibility — is answered only from an evidence bundle with `fetched_at` stamps. The prompt states today's date and forbids recall. A claim dated later than any evidence is struck. A question about a date newer than all evidence returns "our data ends on <date>", the newest data, and no fill-in.
+
+## 8. "No data" is a success path
+Absent or thin evidence renders the no-data template: what was searched, the nearest data with its date, one next step. Thin data is labelled on every card. The no-data rate is public on `/evidence`. `nodata_adversarial.jsonl` violations = 0.
+
+## 9. Scope and seriousness
+No placement promises, no ranking a person against others, no invented hiring policies or cut-offs. A reported question is labelled "reported by a candidate on <date>". Never instruct a user to pay to apply. Enforced by forbidden-claim regexes in the verifier, not by prompt wording.
+
+## 10. Failure mode
+If the verifier itself fails, degrade to structured cards with no free prose. Never ship unverified prose because the verifier was down.

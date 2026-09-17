@@ -11,3 +11,11 @@
 - Voice: five stamps (`t_release`, `t_asr_final`, `t_llm_first_token`, `t_engine_done`, `t_audio_first_chunk`), stamped once each and carried. Never re-read the clock for the same instant.
 - `worker.py` and the arq worker handle SIGINT and SIGTERM: drain, ack in flight, exit 0.
 - Structured logs only. Never log a key, a token, or a connection string.
+
+## v6 additions (plan §7.11–7.15)
+- **New packages under `apps/api/daari/`**: `grounding/` (`verifier.py`, `evidence.py`, `nodata.py`), `intel/` (company+role question corpus), `prep/` (`notice.py`, `pack.py`, `schedule.py`), `schemes/telugu.py`, `personas/placement.py`. Routers add `prep`, `questions`, `evidence`.
+- **Verified provider ids** (D9, re-verify at `/setup`, never from memory): Gemini `gemini-2.5-flash`; Groq chat `openai/gpt-oss-120b` (Llama 3.3/4 are **gone** from Groq); Groq ASR `whisper-large-v3` (+ `-turbo`); Ollama `llama3.1:8b` if pulled.
+- **Verified endpoints** (D10): myscheme search `POST/GET https://api.myscheme.gov.in/search/v6/schemes` with `x-api-key`, browser UA and `Referer: https://www.myscheme.gov.in/` — **v4 and v5 now return 500**. Nominatim `search?format=jsonv2` with a contact UA, 1 req/s, cached. Remotive `https://remotive.com/api/remote-jobs`, no key. Adzuna `https://api.adzuna.com/v1/api/jobs/in/search/1`.
+- **Grounding runs before rendering and before TTS.** `verifier.py`: sentence split → deterministic checks (`check_numbers`, `check_dates`, `check_names`, forbidden-claim regexes) → LLM SUPPORTED / UNSUPPORTED / NUMERIC-MISMATCH at temperature 0, cached → strike → citations. p95 budget 400 ms, checks run in parallel. Fewer than one surviving factual sentence → the no-data template. A struck sentence is **removed, not rephrased**.
+- **Today's date is passed in the system prompt** and recall is forbidden. Every evidence item carries `fetched_at` and `as_of` where extractable; the reply states the newest evidence date it used.
+- No personal names are stored from interview experiences or placement notices — strip spans before persisting.

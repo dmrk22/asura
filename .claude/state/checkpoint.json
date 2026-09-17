@@ -1,47 +1,62 @@
 {
-  "task_id": "setup",
-  "phase": "P0-setup",
+  "task_id": "setup-v6-rerun",
+  "phase": "P1-skeleton",
   "status": "complete",
   "project": "DAARI (Team ASURA), repo asura",
-  "updated": "2026-09-17",
+  "spec_version": "DAARI_BUILD_PLAN.md v6, 18 Sep 2026",
+  "updated": "2026-09-18",
   "files_touched": [
-    "CLAUDE.md",
-    ".claude/rules/{core,api,web,data,safety}.md",
-    ".claude/agents/{planner,builder,reviewer,designer,red-team}.md",
-    ".claude/commands/{go,audit,demo,lane}.md",
-    ".claude/settings.json",
-    ".env.example",
-    ".gitignore",
-    "docker-compose.yml",
-    ".github/workflows/ci.yml",
-    "docs/{STATE,DECISIONS,UI_BRIEF}.md"
+    "CLAUDE.md (rewritten to v6 §5.1, 13 non-negotiables)",
+    ".claude/rules/{core,api,web,data,safety}.md (v6 sections appended)",
+    ".claude/agents/{builder,designer,red-team}.md (removed the broken `tools:` line)",
+    ".claude/agents/{planner,reviewer}.md (planner +Bash; reviewer = seven modules)",
+    ".claude/commands/{go,demo,audit}.md (v6)",
+    ".claude/settings.json (+huggingface-cli)",
+    ".env.example (+DATAGOV_KEY, expected key lengths)",
+    ".gitignore (+.playwright-mcp/)",
+    "docs/CONSTITUTION.md (new, 13 articles)",
+    "docs/STATE.md, docs/DECISIONS.md (D9-D16)",
+    "packages/core/** (pyproject, daari_core/{__init__,telemetry}.py, 4 test files + violating fixture)",
+    "apps/api/** (pyproject, daari/{config,db,main}.py, alembic baseline, tests/test_health.py)",
+    "apps/web/** (next-intl en/te/hi, styles/tokens.css, [locale] route, proxy.ts, 2 unit tests, 4 screenshots)"
   ],
   "commands_run": [
-    {"cmd": "brew install ffmpeg", "exit": 0, "evidence": "ffmpeg + ffprobe 9.0.1"},
-    {"cmd": "hooktest.py (18 cases)", "exit": 0, "evidence": "18/18 — 9 blocked, 9 allowed"},
-    {"cmd": "npm view <13 pkgs> version", "exit": 0, "evidence": "DECISIONS.md D3"},
-    {"cmd": "pypi.org/pypi/<17 pkgs>/json", "exit": 0, "evidence": "DECISIONS.md D3"},
-    {"cmd": "context7 resolve-library-id Next.js", "exit": 0, "evidence": "returned /vercel/next.js"},
-    {"cmd": "gh auth status", "exit": 0, "evidence": "logged in as dmrk22"},
-    {"cmd": "docker info", "exit": 0, "evidence": "daemon 29.7.2 up"}
+    {"cmd": "packages/core: uv run pytest -q", "exit": 0, "evidence": "5 passed, 1 skipped"},
+    {"cmd": "apps/api: uv run pytest -q", "exit": 0, "evidence": "6 passed (3 are the new ollama-probe regressions)"},
+    {"cmd": "apps/api: uv run alembic upgrade head", "exit": 0, "evidence": "pg_extension shows vector 0.8.6"},
+    {"cmd": "curl localhost:8000/health", "exit": 0, "evidence": "ok=true in 916ms; adzuna http_401, serpapi null, ollama model_not_pulled"},
+    {"cmd": "apps/web: pnpm build | typecheck | test | lint", "exit": 0, "evidence": "green on TypeScript 7.0.2; 3/3 unit tests"},
+    {"cmd": "curl localhost:3000 and /te", "exit": 0, "evidence": "307->/en 'DAARI · online'; /te 'దారి · ఆన్‌లైన్' in Noto Telugu"},
+    {"cmd": "ruff check (core, api) / biome lint (web)", "exit": 0, "evidence": "all checks passed"},
+    {"cmd": "hooktest.py (20 cases)", "exit": 0, "evidence": "20/20 - 10 blocked, 10 allowed"},
+    {"cmd": "grep model in subagents/*.jsonl", "exit": 0, "evidence": "claude-sonnet-5 on both - routing check PASS"},
+    {"cmd": "live probes: gemini, groq, nominatim, remotive, myscheme v6, adzuna, serpapi", "exit": 0, "evidence": "DECISIONS D9-D11"}
   ],
   "evidence": {
-    "git_remote": "https://github.com/dmrk22/asura.git",
-    "toolchain": "git 2.55.0 / gh 2.101.0 / uv 0.12.15 / pnpm 12.3.4 / node 22.23.2 / docker 29.7.2 / ffmpeg 9.0.1 / ollama 0.34.1",
-    "missing_tools": ["vercel CLI (optional, cut line 9)", "Microsoft Edge (human to-do)"],
-    "env_file_present": false,
-    "llm_keys_present": false,
+    "health_ok": true,
+    "health_red_fields": ["adzuna (http_401)", "serpapi_budget_left (null)"],
+    "health_skipped_fields": ["llm[ollama] (model_not_pulled)"],
+    "web_exit_criterion": "met (en + te)",
+    "env_file_present": true,
+    "env_keys_filled": "19 of 23; empty are deploy-only: HF_SPACE_ID, HF_TOKEN, PROD_DATABASE_URL, PROD_REDIS_URL",
+    "groq_chat_model": "openai/gpt-oss-120b (Llama 3.3/4 no longer served)",
+    "myscheme_endpoint": "api.myscheme.gov.in/search/v6/schemes (v4, v5 return 500)",
+    "redis_pin": "5.3.1 (arq 0.28.0 requires redis[hiredis]<6)",
+    "containers": "daari-postgres 17.11 + daari-redis 7, both healthy",
     "ollama_models_pulled": [],
-    "containers_started": false,
-    "scaffold_written": false
+    "agent_definitions_fixed_but_cached": true
   },
   "blockers": [
-    ".env does not exist. Human must `cp .env.example .env` and fill GEMINI_API_KEY, GROQ_API_KEY, ADZUNA_APP_ID, ADZUNA_APP_KEY, SERPAPI_KEY. P1's /health gate cannot go green until then; scaffolding is not blocked."
+    "ADZUNA_APP_KEY is 31 chars (Adzuna issues 32) and SERPAPI_KEY is 63 (SerpAPI issues 64); both 401. Adzuna is required for P3 demand weights. Human must re-paste into .env; Claude Code never edits it."
   ],
-  "deferred_to_go": [
-    "Subagent routing check (CLAUDE.md §Models): dispatch one throwaway builder, grep its transcript for the model, confirm sonnet.",
-    "docker compose up -d — containers not started at setup; P1 starts them.",
-    "TypeScript 7.0.2 + Next 16.3.5 compatibility must be proven green in P1 before the web lane goes wide (DECISIONS.md D3)."
+  "human_todo": [
+    "Re-paste ADZUNA_APP_KEY and SERPAPI_KEY",
+    "Install Microsoft Edge (demo browser, te-IN TTS fallback)",
+    "Restart Claude Code once so the fixed agent definitions load",
+    "Optional: ollama pull llama3.1:8b",
+    "Test the wired mic in the hall",
+    "Bring one redacted placement notice",
+    "Data-lane review of the te/hi strings"
   ],
-  "next_action": "/go — planner writes docs/superpowers/plans/phase-1-skeleton.md from the P1 row of DAARI_BUILD_PLAN.md §6, acceptance tests first; then P1 scaffolding."
+  "next_action": "/go - planner writes docs/superpowers/plans/phase-2-engine.md from the P2 row of DAARI_BUILD_PLAN.md §13 (graph, vectors, matcher, roadmap + Before | After, CAT, tool registry), acceptance tests first."
 }

@@ -2,7 +2,6 @@
 name: designer
 description: Owns apps/web. Loads frontend-design and design-critique; screenshots with Playwright and critiques before handoff.
 model: sonnet
-tools: All tools
 ---
 `docs/UI_BRIEF.md` is law. Load the frontend-design skill and run design-critique before every handoff.
 

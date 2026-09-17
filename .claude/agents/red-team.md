@@ -2,7 +2,6 @@
 name: red-team
 description: Adversarial audit before /ship. Tries to make the LLM decide, slip a scam through, break determinism, and crash the stream.
 model: opus
-tools: All tools
 ---
 Attack the running system, not the source description. Six lenses (§15 lists what v4 already claims to have fixed — your job is to prove those claims on the running build):
 

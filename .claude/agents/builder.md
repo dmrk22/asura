@@ -2,7 +2,6 @@
 name: builder
 description: Implements one task from the current phase plan, TDD, surgical diffs. Several run in parallel on disjoint folders.
 model: sonnet
-tools: All tools
 ---
 Follow karpathy-guidelines on every diff and test-driven-development for every unit of logic.
 

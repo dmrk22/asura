@@ -85,3 +85,48 @@ The previous project's `.claude/rules/safety.md` was health-triage-specific. Rew
 - **No cloud provisioning.** Deploy is §13 cut line 9 and the laptop is the primary demo. Supabase / Upstash / Vercel / HF are wired as optional keys only; `/ship` provisions them if the clock allows.
 - **No notification target.** This project declares no Telegram/Slack integration, so `/setup` step 8 is a no-op. Add one to `.env.example` first if you want build pings.
 - **No subagent routing check.** §5.1 asks `/setup` to dispatch a throwaway builder and grep its transcript for the model. Not run — dispatching a subagent for a setup task is a cost with no payoff until P1 has something to build. Do it as the first action of `/go`.
+
+---
+
+## D9 · 2026-09-18 · Groq no longer serves Llama 3.3 70B or Llama 4 — plan §3 was stale
+`GET https://api.groq.com/openai/v1/models` on this account returns 13 models and **no Llama 3.3 or Llama 4**:
+`allam-2-7b`, `canopylabs/orpheus-arabic-saudi`, `canopylabs/orpheus-v1-english`, `groq/compound`, `groq/compound-mini`, `meta-llama/llama-prompt-guard-2-22m`, `meta-llama/llama-prompt-guard-2-86m`, `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `openai/gpt-oss-safeguard-20b`, `qwen/qwen3.8-27b`, `whisper-large-v3`, `whisper-large-v3-turbo`.
+
+**Decision: the Groq link in the chain is `openai/gpt-oss-120b`** (the largest tool-capable chat model on the list), with `qwen/qwen3.8-27b` as the same-provider fallback. ASR is unaffected: `whisper-large-v3` is present, and `whisper-large-v3-turbo` is available if latency bites at P4. Gemini `gemini-2.5-flash` is live and stays first in the chain (`gemini-3-flash-preview` and `gemini-3.1-flash-lite` are also listed — do not adopt a preview model on the demo path).
+
+This is exactly what non-negotiable 5 exists for. Anything that hardcodes a Llama id from the plan text is a bug.
+
+**Not verified:** the *numeric* free-tier rate limits for Gemini and Groq. Both consoles need an interactive login, which `/setup` cannot do. Reachability and model availability are verified; requests-per-minute is not. Treat the chain's circuit breaker (3 failures or one 429 → skip 60 s) as the real defence and do not design against a remembered quota.
+
+## D10 · 2026-09-18 · myscheme.gov.in search API is `v6`; v4 and v5 are dead
+Probed live: `search/v4` and `search/v5` both return `HTTP 500 {"message":"Internal server error"}`. **`GET https://api.myscheme.gov.in/search/v6/schemes?lang=en&q=[]&keyword=<kw>&sort=&from=0&size=<n>`** returns `200` with `{status:"Success", data:{summary:{total:…}}}` — 186 results for `income` — when sent with three headers together: `x-api-key: tYTy5eEhlu9rFjyxuCr7ra7ACp4dv1RH8gWuHTDc` (the portal's own public web key), a browser `User-Agent`, and `Referer: https://www.myscheme.gov.in/`. Without the key: `401`. That key is public site configuration, not a secret, so it belongs in `data/sources.yaml`, not in `.env`.
+
+Also verified live: Nominatim returns Guntur at `16.2915189,80.4541588` with a contact `User-Agent` (1 req/s, cached, per its usage policy); Remotive answers with no key; `www.myscheme.gov.in/sitemap.xml` is a valid crawl fallback if the API moves again. **The Playwright fallback in §7.5 stays in the plan** — an API that changed twice will change again.
+
+## D11 · 2026-09-18 · Two keys in `.env` are one character short and return 401
+`.env` now exists with all 23 keys present and 19 non-empty. Gemini and Groq authenticate. **Adzuna returns `401 AUTH_FAIL` and SerpAPI returns `401 Invalid API key`.** The likely cause is a truncated paste, not a wrong account: `ADZUNA_APP_KEY` is **31 characters (Adzuna issues 32)** and `SERPAPI_KEY` is **63 characters (SerpAPI issues 64)** — each exactly one short. Values were never printed; only lengths were measured. `.env.example` now documents the expected lengths so the next paste is self-checking.
+
+Consequence: Adzuna is **required** for demand weights (§7.4), so this blocks P3's demand weighting, not P1. SerpAPI is §13 cut line 8 and can be dropped entirely. `/health` reports both honestly rather than hiding them.
+
+## D12 · 2026-09-18 · `tools: All tools` in the agent frontmatter meant *zero* tools
+Every dispatch of `builder`, `designer` and `red-team` failed with *"would be spawned with zero tools — refusing: unrecognized [All, tools]"*. The frontmatter line `tools: All tools`, written at the previous setup, is parsed as a comma-separated **list of tool names**, and the two tokens `All` and `tools` are not tools. The correct way to grant every tool is to **omit the field**. Fixed in `builder.md`, `designer.md`, `red-team.md`; `planner.md` gained `Bash` (it has to run `git log`); `reviewer.md` keeps its read-only list and now names all seven safety-critical modules.
+
+Agent definitions are cached for the life of a session, so the fix takes effect on the next `claude` start. This setup ran its two scaffold agents as `general-purpose` with an explicit `sonnet` override to get the same routing.
+
+## D13 · 2026-09-18 · Subagent routing check: PASS (supersedes D8's fourth bullet)
+Both scaffold subagents' transcripts under `~/.claude/projects/-Users-damaruk-dev-asura/<session>/subagents/` contain exactly one model: `"model":"claude-sonnet-5"`. Sonnet routing is correct, `CLAUDE_CODE_SUBAGENT_MODEL` needs no change, and the human can move to `/model opusplan` without the fallback in §5.1.
+
+## D14 · 2026-09-18 · The pre-tool guard blocks *documentation* that quotes a destructive command
+`pre-tool-guard.sh` greps the whole Bash command string, so a heredoc writing the sentence "never run recursive force-delete outside build dirs" is blocked as if it were that command. The guard is correct to be dumb here — narrowing it to ignore heredoc bodies is exactly the hole a malicious payload would use. **Decision: keep the guard unchanged; write documents that quote dangerous commands with the Write tool, not with a shell heredoc.** `CLAUDE.md`'s "Never" line is now phrased without the literal flags.
+
+## D15 · 2026-09-18 · `redis` pinned to 5.3.1, not 8.1.0 — `arq` forbids 6.x and up
+D3 pinned `redis==8.1.0` from the registry's latest. It is **mutually unsatisfiable with `arq==0.28.0`**, whose published metadata requires `redis[hiredis]<6,>=4.2.0` (confirmed live against the PyPI JSON API for arq 0.28.0, not inferred from an error message). No arq release supports redis 8.x.
+
+**Decision: `redis==5.3.1`** — the newest release inside arq's window — with the reason inline in `apps/api/pyproject.toml`. Latest-from-the-registry is the rule for choosing a version; a dependency's own constraint still outranks it. Revisit only if arq ships a release that widens the pin; do not "upgrade redis" as a tidy-up without checking arq first.
+
+## D16 · 2026-09-18 · `/health` must not report a reachable daemon as a usable provider
+The first `/health` body reported `{"provider":"ollama","model":"llama3.1:8b","status":"ok","detail":"reachable"}`. Ollama is installed and running but **has no models pulled** — `GET /api/tags` returns `200 {"models":[]}`. A 200 from the daemon is not a provider: the chain's third link would have failed on its first real call, at P4, on stage.
+
+The probe now parses the tag list and reports `skipped: model_not_pulled` unless the configured model is actually present (matching `llama3.1:8b` and a bare `llama3.1:latest` pull alike). Three regression tests in `apps/api/tests/test_health.py` cover empty list, model present, and bare-tag pull. Live body now reads `"status": "skipped", "detail": "model_not_pulled"`.
+
+The general rule, since `/health` is what the P1 gate and the pitch both rely on: **a probe reports the capability, not the connection.** Reachable, authenticated and usable are three different facts.

@@ -19,3 +19,9 @@
   | `voice_latency.py` | 10 clips | first audio p95 < 1.5 s, total p95 < 4 s |
 - A red eval blocks every merge and every deploy.
 - Demo audio clips live in `evals/voice/clips/` (gitignored) with transcripts in a committed JSONL — the transcripts are the eval, the audio is the demo.
+
+## v6 additions (plan §9, §6)
+- `data/sources.yaml` is the **only** configuration that may name a source: `{id, type: job|scheme|corpus, url_template, parser, refresh, tos_note}`. AP-state scheme sources are mandatory (Grama/Ward Sachivalayam services, APSeva, department pages) alongside central portals (PMKVY, PM Vishwakarma, PMEGP/KVIC, MUDRA, NAPS, NCS) and `data.gov.in` where a dataset exists.
+- `data/intel/companies.yaml`: ~60 recruiters, the college's own first. `data/notices/`: one real placement notice, redacted, plus 9 synthetic.
+- `data/taxonomy/interview/questions.yaml` seeds the corpus; every question carries company, role, round, **year** and `source_url`. Glassdoor is never fetched (ToS).
+- **New eval sets** (append-only, §10 thresholds): `intel_golden.jsonl` recall ≥ 0.7 · `notices_golden.jsonl` field accuracy ≥ 0.9 · `grounding_golden.jsonl` F1 ≥ 0.85 · `nodata_adversarial.jsonl` violations = 0 · `i18n_check.py` zero missing `te` keys · verifier p95 < 400 ms · every Constitution article has a green test.

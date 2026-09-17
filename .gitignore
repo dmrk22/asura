@@ -18,3 +18,5 @@ apps/web/.vercel
 # Demo audio: the transcripts are the eval, the audio is the demo.
 evals/voice/clips/*
 !evals/voice/clips/.gitkeep
+# Playwright MCP scratch output (screenshots we keep live in apps/web/tests/screenshots/)
+.playwright-mcp/
