@@ -20,3 +20,4 @@ evals/voice/clips/*
 !evals/voice/clips/.gitkeep
 # Playwright MCP scratch output (screenshots we keep live in apps/web/tests/screenshots/)
 .playwright-mcp/
+.playwright-mcp/

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DAARI — offline demo</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e2229;
+    --border: #2a2f3a;
+    --text: #e8eaee;
+    --muted: #9aa1ad;
+    --accent: #4f8cff;
+    --good: #35c98f;
+    --bad: #ff6b6b;
+    --warn: #f2b84b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: 0.02em; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  .personas { display: flex; gap: 8px; }
+  .persona-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .persona-btn.active { border-color: var(--accent); background: rgba(79,140,255,0.15); }
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  section.panel h2 { margin: 0 0 4px; font-size: 15px; }
+  .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 14px; }
+  .goal-line { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .goal-line b { color: var(--text); }
+  ol.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  ol.steps li {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+  }
+  ol.steps li .n {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: var(--accent); color: white; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  ol.steps li .name { flex: 1; font-size: 13.5px; }
+  ol.steps li .hours { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .total-row { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+  .total-row b { color: var(--text); font-variant-numeric: tabular-nums; }
+  button.learn {
+    margin-top: 14px; width: 100%; padding: 11px; border-radius: 8px; border: none;
+    background: var(--accent); color: white; font-size: 13.5px; cursor: pointer; font-weight: 600;
+  }
+  button.learn:disabled { background: var(--panel-2); color: var(--muted); cursor: default; }
+  .diff-box { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 14px; }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .diff-col h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px; }
+  .diff-col .step { font-size: 12.5px; padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; background: var(--panel-2); }
+  .diff-col .step.removed { text-decoration: line-through; color: var(--bad); background: rgba(255,107,107,0.1); }
+  .diff-col .step.reordered { border-left: 3px solid var(--warn); }
+  .diff-summary { margin-top: 12px; font-size: 13px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .diff-summary .metric b { color: var(--good); font-variant-numeric: tabular-nums; }
+  .job {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .job-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .job-top .title { font-size: 13.5px; font-weight: 600; }
+  .job-top .score { font-variant-numeric: tabular-nums; font-size: 13px; }
+  .job .company { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .bar { height: 5px; border-radius: 999px; background: var(--border); margin: 8px 0; overflow: hidden; }
+  .bar div { height: 100%; background: var(--good); }
+  .skills-line { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .skills-line b { color: var(--bad); font-weight: 500; }
+  .provenance { font-size: 11px; color: var(--muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .provenance a { color: var(--accent); text-decoration: none; }
+  .empty { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>DAARI <span>· offline localhost demo</span></h1>
+  <div class="personas" id="personas"></div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Roadmap</h2>
+    <div class="sub">Recomputed live from the skill graph — nothing here is faked.</div>
+    <div class="goal-line" id="goalLine"></div>
+    <ol class="steps" id="steps"></ol>
+    <div class="total-row"><span>Total hours remaining</span><b id="totalHours"></b></div>
+    <button class="learn" id="learnBtn"></button>
+    <div class="diff-box" id="diffBox" style="display:none"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Local job matches</h2>
+    <div class="sub">Seeded listings — offline demo data, not live-fetched tonight.</div>
+    <div id="jobs"></div>
+  </section>
+</main>
+
+<script>
+const API = "http://localhost:8000";
+const ACRONYMS = new Set(["sql", "gps", "pos"]);
+
+function label(id) {
+  return id.split("_").map(w => ACRONYMS.has(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+
+let profiles = {};
+let currentId = null;
+let held = [];
+let goal = null;
+
+async function init() {
+  profiles = await fetch(`${API}/profiles`).then(r => r.json());
+  const personaWrap = document.getElementById("personas");
+  personaWrap.innerHTML = Object.entries(profiles).map(([id, p]) =>
+    `<button class="persona-btn" data-id="${id}">${p.name}</button>`
+  ).join("");
+  personaWrap.querySelectorAll(".persona-btn").forEach(btn =>
+    btn.addEventListener("click", () => selectPersona(btn.dataset.id))
+  );
+  selectPersona(Object.keys(profiles)[0]);
+}
+
+function selectPersona(id) {
+  currentId = id;
+  held = [...profiles[id].held];
+  goal = profiles[id].goal;
+  document.querySelectorAll(".persona-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.id === id)
+  );
+  document.getElementById("diffBox").style.display = "none";
+  loadRoadmap();
+  loadJobs();
+}
+
+async function loadRoadmap() {
+  const rm = await fetch(`${API}/roadmap`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ profile: held, goal }),
+  }).then(r => r.json());
+
+  document.getElementById("goalLine").innerHTML =
+    `Goal: <b>${label(goal)}</b> &middot; ${held.length} skill(s) already held`;
+
+  const stepsEl = document.getElementById("steps");
+  if (rm.steps.length === 0) {
+    stepsEl.innerHTML = "";
+    document.getElementById("totalHours").textContent = "0h";
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "Goal already reached — every required skill is held.";
+    stepsEl.replaceWith(empty);
+    document.getElementById("learnBtn").style.display = "none";
+    return;
+  }
+  stepsEl.innerHTML = rm.steps.map((s, i) =>
+    `<li><span class="n">${i + 1}</span><span class="name">${label(s.skill)}</span><span class="hours">${s.hours}h</span></li>`
+  ).join("");
+  document.getElementById("totalHours").textContent = `${rm.total_hours}h`;
+
+  const nextSkill = rm.steps[0].skill;
+  const btn = document.getElementById("learnBtn");
+  btn.style.display = "block";
+  btn.textContent = `I learned "${label(nextSkill)}"`;
+  btn.onclick = () => learnSkill(nextSkill);
+}
+
+async function learnSkill(skillId) {
+  const diff = await fetch(`${API}/roadmap/learn`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ profile: held, goal, new_skill: skillId }),
+  }).then(r => r.json());
+
+  renderDiff(diff);
+  held = [...held, skillId];
+  await loadRoadmap();
+  await loadJobs();
+}
+
+function renderStepList(steps, removedSet, reorderedSet) {
+  return steps.map(s => {
+    const classes = ["step"];
+    if (removedSet.has(s.skill)) classes.push("removed");
+    if (reorderedSet.has(s.skill)) classes.push("reordered");
+    return `<div class="${classes.join(" ")}">${label(s.skill)} · ${s.hours}h</div>`;
+  }).join("");
+}
+
+function renderDiff(diff) {
+  const removedSet = new Set(diff.removed);
+  const reorderedSet = new Set(diff.reordered);
+  const box = document.getElementById("diffBox");
+  box.style.display = "block";
+  box.innerHTML = `
+    <div class="diff-grid">
+      <div class="diff-col">
+        <h3>Before</h3>
+        ${renderStepList(diff.before.steps, removedSet, reorderedSet) || '<div class="empty">—</div>'}
+      </div>
+      <div class="diff-col">
+        <h3>After</h3>
+        ${renderStepList(diff.after.steps, new Set(), reorderedSet) || '<div class="empty">Goal reached</div>'}
+      </div>
+    </div>
+    <div class="diff-summary">
+      <div class="metric">Hours saved: <b>${diff.hours_saved}h</b></div>
+      <div class="metric">Removed: <b>${diff.removed.length}</b></div>
+      <div class="metric">Reordered: <b>${diff.reordered.length}</b></div>
+    </div>
+  `;
+}
+
+async function loadJobs() {
+  const jobs = await fetch(`${API}/jobs?skills=${encodeURIComponent(held.join(","))}`).then(r => r.json());
+  const el = document.getElementById("jobs");
+  el.innerHTML = jobs.map(j => `
+    <div class="job">
+      <div class="job-top">
+        <span class="title">${j.title}</span>
+        <span class="score">${Math.round(j.match_score * 100)}%</span>
+      </div>
+      <div class="company">${j.company} · ${j.location}</div>
+      <div class="bar"><div style="width:${j.match_score * 100}%"></div></div>
+      ${j.missing_skills.length
+        ? `<div class="skills-line">Missing: <b>${j.missing_skills.map(label).join(", ")}</b></div>`
+        : `<div class="skills-line">All required skills held</div>`}
+      <div class="provenance">${j.company} listing · fetched ${new Date(j.fetched_at).toLocaleString()} · <a href="${j.source_url}" target="_blank" rel="noopener">source (placeholder)</a></div>
+    </div>
+  `).join("");
+}
+
+init();
+</script>
+</body>
+</html>
