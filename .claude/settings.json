@@ -5,6 +5,7 @@
       "Bash(uv:*)", "Bash(pnpm:*)", "Bash(npm view:*)", "Bash(npx:*)", "Bash(git:*)", "Bash(gh:*)",
       "Bash(docker:*)", "Bash(docker compose:*)", "Bash(ollama:*)", "Bash(vercel:*)", "Bash(hf:*)",
       "Bash(python3:*)", "Bash(curl:*)", "Bash(make:*)", "Bash(ruff:*)", "Bash(pytest:*)",
+      "Bash(ffmpeg:*)", "Bash(ffprobe:*)",
       "Read(**)", "Edit(**)", "Write(**)"
     ],
     "deny": [

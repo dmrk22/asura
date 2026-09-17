@@ -1,3 +1,0 @@
-# Clinical corpus manifest. One entry per document. A doc without a licence is not a doc.
-# Target ~80 pages (cut line 4: 40). Filled by scripts/corpus_build.py in P3.
-docs: []

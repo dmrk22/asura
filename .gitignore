@@ -15,5 +15,6 @@ coverage/
 playwright-report/
 test-results/
 apps/web/.vercel
-evals/meals/photos/*
-!evals/meals/photos/.gitkeep
+# Demo audio: the transcripts are the eval, the audio is the demo.
+evals/voice/clips/*
+!evals/voice/clips/.gitkeep

@@ -1,59 +1,53 @@
-# STATE.md — NADI (Team ASURA)
+# STATE.md — DAARI (Team ASURA) · SYNORA Track 1 · Problem 01
 
-**Updated:** 17 Sep 2026, setup complete · **Phase:** P1 Skeleton — not started · **Clock:** not started
+Spec: `DAARI_BUILD_PLAN.md`. Clock: §6. Cut lines: §13.
+Updated 2026-09-17 by `/setup`.
 
 ## Now
-**P1 Skeleton (0:00–0:45).** First task: `llm/` provider chain — `complete()` / `vision()` with
-Gemini → Groq → Ollama → cache, per-provider circuit breaker, token bucket, sha256 response cache.
-Everything else in P1's gate is already standing (see Done).
+**P1 Skeleton (0:00–0:40) — not started.**
+First task: dispatch `planner` to write `docs/superpowers/plans/phase-1-skeleton.md` from §6's P1 row, acceptance tests first. Then scaffold `packages/core`, `apps/api`, `apps/web` and get `/health` green.
 
-Run `/go` to start. It reads this file, the phase plan and `git log -10` first.
+P1 gate (§6, verbatim): *`/health` green incl. tools, ASR, TTS, Adzuna, SerpAPI budget.*
 
-## Done at setup (verified, not assumed)
-| Thing | Evidence |
-|---|---|
-| Repo scaffold §4 | 58 files; `apps/api`, `apps/web`, `data/`, `evals/`, `scripts/`, `.claude/`, `docs/` |
-| Postgres 17 + pgvector | container healthy; `CREATE EXTENSION vector` → **0.8.6** |
-| Redis 7 | container healthy; `redis-cli ping` → PONG |
-| Alembic baseline | `alembic upgrade head` applied; `alembic_version` = `36c6c9f06d27` |
-| API `/health` | live server returned `{"sha":...,"db":"ok","redis":"ok","llm":["cache"]}` |
-| Web renders | `pnpm build` clean; served page contains **NADI · online** |
-| Full gate | biome 0 · tsc 0 · next build 0 · ruff 0 · pyright 0 · pytest 0 |
-| Hooks | 14/14 cases pass — force-push blocked, `rm -rf` outside build dirs blocked, `.env` reads blocked |
-| Slash commands | `/go /lane /demo /audit /ship` registered and listed by the harness |
-| MCP | Context7 answered a live query; Playwright available via plugin |
-| Versions | pinned from the registry at setup, not memory — see DECISIONS.md |
-| CI on GitHub | run 35235735902 on `main` — **web ✓ api ✓ evals ✓** |
-| Repo | github.com/dmrk22/asura (private), `main` pushed |
+## Phase status
+| Phase | Slot | Status |
+|---|---|---|
+| P1 Skeleton | 0:00–0:40 | not started |
+| P2 Engine (E1, E2, E5, E8 registry) | 0:40–2:30 | not started |
+| P3 Live leads, demand, schemes (E3, E4) | 2:30–4:15 | not started |
+| P4 Streaming voice + agent loop (E6, E8) | 4:15–5:45 | not started |
+| P5 Interview (E7) | 5:45–7:15 | not started |
+| P6 Evidence + polish | 7:15–8:15 | not started |
+| P7 Rehearsal + audit | 8:15–9:15 | not started |
+| Freeze + optional deploy | 9:15–10:00 | not started |
 
-`llm` shows only `cache` because `.env` does not exist yet. It will list `gemini` / `groq` once keys are in.
+## Done at setup
+- Operating layer rewritten for DAARI: `CLAUDE.md`, `.claude/rules/{core,api,web,data,safety}.md`, all five agents, all five slash commands.
+- Infra config: `docker-compose.yml` (pgvector pg17 + redis 7, `daari` credentials), `.github/workflows/ci.yml` (core / api / web / evals jobs, ffmpeg installed in CI).
+- `.env.example` rewritten for DAARI; `.gitignore` updated.
+- Toolchain verified; **ffmpeg 9.0.1 installed** (early, per §15 finding 22).
+- Versions pinned live from npm and PyPI → `docs/DECISIONS.md` D3.
+- Hooks proven by execution: 18/18 sample payloads → `docs/DECISIONS.md` D6.
+- MCP (context7, playwright) verified → D5.
 
 ## Blockers
-**None for P1 code.** The LLM chain can be built and unit-tested against the cache tier with no keys.
-Keys are needed before the first real vision call (P6 Meals) and the router tie-break (P2).
+**P1's health check cannot go green until the human to-do below is done.** Nothing else is blocked — the planner and the scaffolding can start immediately.
 
 ## Phone / human to-do
-1. **`.env` — do this first.** `cp .env.example .env`, then fill **at least one**:
-   - `GEMINI_API_KEY` — aistudio.google.com → *Get API key*. No card.
-   - `GROQ_API_KEY` — console.groq.com → *API keys*. No card.
-   While there, note the free-tier **requests-per-minute** for each and tell me — they go into
-   `nadi/config.py` (`gemini_rpm`, `groq_rpm`) so the token bucket uses a real number, not my placeholder
-   (currently 10 and 30). Never paste a key into chat; the file is enough. I never read or edit `.env`.
-2. **Ollama models — home Wi-Fi only, ~9 GB.** This Mac has 16 GB RAM, so it qualifies. `ollama list` is
-   currently empty. Run: `ollama pull qwen2.5vl:7b && ollama pull llama3.1:8b`.
-   Skip it and the chain simply falls through to the cache — the scripted demo still works offline.
-3. **Food photos at lunch.** 8 canteen plates (thali, dal-rice, roti-sabzi, idli-sambar, dosa, biryani,
-   curd rice, samosa + chai). Note the contents and counts (2 rotis, 1 katori dal). Into
-   `evals/meals/photos/` when P6 asks. This is both the macro eval set and the demo images.
-4. **Teammate laptops** (if a second one joins): `git clone`, then install the same plugins —
-   superpowers, frontend-design, karpathy-guidelines. `.mcp.json` brings Context7 and Playwright along
-   with the clone. Then `/lane api|web|data`. Nobody edits another lane's folder.
-5. **Optional, deploy only (hour 11:30 — skip unless the clock is kind).** I cannot do these: both CLIs
-   are missing and both need an interactive browser login.
-   `pnpm add -g vercel && vercel login` · `uv tool install huggingface_hub && hf auth login` ·
-   Supabase project `asura-nadi` (Singapore) → pooler string → `PROD_DATABASE_URL` ·
-   Upstash Redis (Singapore) → `PROD_REDIS_URL` · HF write token → `HF_TOKEN`.
-   All four blank = `/ship` skips deploy and the laptop demo stands alone. That is a fine outcome.
+1. **Create `.env` and fill five keys.** Claude Code never creates or edits `.env`.
+   ```
+   cp .env.example .env
+   ```
+   Then fill, all free and card-less:
+   - `GEMINI_API_KEY` — aistudio.google.com → "Get API key"
+   - `GROQ_API_KEY` — console.groq.com → API keys (also powers ASR)
+   - `ADZUNA_APP_ID` + `ADZUNA_APP_KEY` — developer.adzuna.com → sign up
+   - `SERPAPI_KEY` — serpapi.com → free plan, 100 searches/month, **no card**
+   At least one of Gemini/Groq is required; Adzuna is required for demand weights. SerpAPI is §13 cut line 4 if it ever asks for a card.
+2. **Install Microsoft Edge** — https://www.microsoft.com/edge. It is the demo browser: it ships native `te-IN` voices, which are the TTS fallback if `edge-tts` fails mid-pitch.
+3. **Optional, on home Wi-Fi with ≥ 16 GB RAM:** `ollama pull llama3.1:8b` — the third link in the provider chain. Ollama is installed but has no models.
+4. **Test the wired mic in the hall.** Push-to-talk, 5 cm from the mouth. §15 finding 15 calls hall noise the largest residual risk.
+5. **Optional deploy keys** (only if you want the QR): Supabase, Upstash, HF token. Deploy is cut line 9 — the laptop is the primary demo.
 
 ## Next concrete action
-`/go` → dispatch `planner` for `docs/superpowers/plans/phase-1-skeleton.md`, then build `nadi/llm/`.
+`/go` — planner writes `docs/superpowers/plans/phase-1-skeleton.md`, then P1 scaffolding begins.

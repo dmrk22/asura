@@ -10,18 +10,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The shared engine. Pure, fast, no services — it must stay that way.
+  core:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/core
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --group dev
+      - name: lint
+        run: uv run ruff check .
+      - name: tests (incl. hypothesis invariants + AST shared-engine test)
+        run: uv run pytest -q
+
   api:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: pgvector/pgvector:pg17
         env:
-          POSTGRES_USER: nadi
-          POSTGRES_PASSWORD: nadi
-          POSTGRES_DB: nadi
+          POSTGRES_USER: daari
+          POSTGRES_PASSWORD: daari
+          POSTGRES_DB: daari
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U nadi -d nadi"
+          --health-cmd "pg_isready -U daari -d daari"
           --health-interval 5s --health-timeout 3s --health-retries 20
       redis:
         image: redis:7
@@ -30,7 +47,7 @@ jobs:
           --health-cmd "redis-cli ping"
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
-      DATABASE_URL: postgresql+asyncpg://nadi:nadi@localhost:5432/nadi
+      DATABASE_URL: postgresql+asyncpg://daari:daari@localhost:5432/daari
       REDIS_URL: redis://localhost:6379/0
     defaults:
       run:
@@ -40,6 +57,9 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
+      # librosa/prosody needs ffmpeg for webm -> wav.
+      - name: ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: uv sync --group dev
       - name: lint
         run: uv run ruff check .
@@ -73,20 +93,23 @@ jobs:
       - name: build
         run: pnpm build
 
-  # The safety gate. A red eval here blocks the merge and the deploy — see CLAUDE.md #1.
+  # The gate. A red eval here blocks the merge and the deploy — see CLAUDE.md #9 and rules/safety.md.
+  # Thresholds: scheme precision@5 >= 0.8 | roadmap invariants pass | scam recall >= 0.9 |
+  # match ablation graph-on >= graph-off | feedback adversarial = 0 | must-mention recall >= 0.8 |
+  # voice first-audio p95 < 1.5 s, total p95 < 4 s (cached clips) | CAT termination passes.
   evals:
     runs-on: ubuntu-latest
-    needs: [api]
+    needs: [core, api]
     services:
       postgres:
         image: pgvector/pgvector:pg17
         env:
-          POSTGRES_USER: nadi
-          POSTGRES_PASSWORD: nadi
-          POSTGRES_DB: nadi
+          POSTGRES_USER: daari
+          POSTGRES_PASSWORD: daari
+          POSTGRES_DB: daari
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U nadi -d nadi"
+          --health-cmd "pg_isready -U daari -d daari"
           --health-interval 5s --health-timeout 3s --health-retries 20
       redis:
         image: redis:7
@@ -95,18 +118,19 @@ jobs:
           --health-cmd "redis-cli ping"
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
-      DATABASE_URL: postgresql+asyncpg://nadi:nadi@localhost:5432/nadi
+      DATABASE_URL: postgresql+asyncpg://daari:daari@localhost:5432/daari
       REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
+      - name: ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: install
         run: uv sync --group dev
         working-directory: apps/api
       - name: run evals
-        id: evals
         run: |
           if [ ! -f ../../evals/run.py ]; then
             echo "evals/run.py not written yet (lands in P2) — skipping"; exit 0

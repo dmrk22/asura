@@ -1,25 +1,25 @@
 services:
   postgres:
     image: pgvector/pgvector:pg17
-    container_name: nadi-postgres
+    container_name: daari-postgres
     environment:
-      POSTGRES_USER: nadi
-      POSTGRES_PASSWORD: nadi
-      POSTGRES_DB: nadi
+      POSTGRES_USER: daari
+      POSTGRES_PASSWORD: daari
+      POSTGRES_DB: daari
     ports: ["5432:5432"]
-    volumes: ["nadi_pg:/var/lib/postgresql/data"]
+    volumes: ["daari_pg:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nadi -d nadi"]
+      test: ["CMD-SHELL", "pg_isready -U daari -d daari"]
       interval: 5s
       timeout: 3s
       retries: 20
 
   redis:
     image: redis:7
-    container_name: nadi-redis
+    container_name: daari-redis
     ports: ["6379:6379"]
     command: ["redis-server", "--appendonly", "yes"]
-    volumes: ["nadi_redis:/data"]
+    volumes: ["daari_redis:/data"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -27,5 +27,5 @@ services:
       retries: 20
 
 volumes:
-  nadi_pg:
-  nadi_redis:
+  daari_pg:
+  daari_redis:

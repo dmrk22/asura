@@ -2,10 +2,15 @@
 description: Rehearse the demo with the network blocked. Run three times before the pitch.
 ---
 1. `docker compose up -d`; wait for both healthchecks.
-2. Start api (`uv run uvicorn nadi.main:app`), `uv run python worker.py`, and web (`pnpm dev`).
-3. Seed persona Ravi: `cd apps/api && uv run python ../../scripts/seed.py --persona ravi`.
-4. `uv run python ../../scripts/warm_cache.py` — executes every LLM call in `docs/DEMO.md` and stores the response by sha256 of its normalised input.
+2. Start api (`cd apps/api && uv run uvicorn daari.main:app`), the refresh worker (`uv run arq daari.leads.refresh.WorkerSettings`), and web (`cd apps/web && pnpm dev`).
+3. Seed both personas: `cd apps/api && uv run python ../../scripts/seed.py --persona ravi --persona priya`.
+4. `uv run python ../../scripts/warm_cache.py` — for every beat in `docs/DEMO.md` it stores:
+   - each LLM and tool-call response by sha256 of its normalised input,
+   - the Groq Whisper transcript for each rehearsed Telugu clip,
+   - the per-sentence `edge-tts` mp3 for each reply,
+   - a snapshot of every lead and scheme fetch, with its original `fetched_at` preserved.
 5. Replay `docs/DEMO.md` as a Playwright dry-run **with outbound network blocked** (route-abort every non-localhost request).
-6. Report per demo beat: passed / failed, the wall-clock time, and the alert latency p50/p95 actually measured.
+6. Report per demo beat: passed / failed, the wall-clock time, and the voice hop latencies actually measured (p50/p95 for ASR, LLM first token, engine, TTS first byte, total).
 
 Any beat that needed the network is a failure, not a warning. Fix it by warming that call.
+Snapshot leads still render `source` and `fetched_at` with a "stale since" note — never hide the stamp to make the demo look live.

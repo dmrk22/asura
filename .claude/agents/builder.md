@@ -10,7 +10,8 @@ Rules:
 - One task at a time, from `docs/superpowers/plans/phase-<N>-*.md`. Do not widen scope.
 - Failing test first, then the minimum code that passes it.
 - Touch only the folders your task names. Another builder owns the rest.
-- Every wellness output path calls `constraints.engine.enforce()`. No bypass flag exists.
+- Matching, roadmap, eligibility, ability estimate, scam score and metrics are `daari_core` calls. The LLM orchestrates and writes words — it never returns a decision. No bypass flag exists.
+- Every lead and scheme carries `source_url` and `fetched_at` end to end. No lead literals outside `tests/fixtures/` or `mocks/`.
 - Versions, model IDs and free-tier limits come from Context7 / `npm view` / PyPI / the provider console. Never from memory.
 - Write findings incrementally to `.claude/state/builder-<task>.md` as you go, not only at the end.
 
