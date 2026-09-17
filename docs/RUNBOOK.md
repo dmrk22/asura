@@ -9,6 +9,26 @@ cd ~/dev/asura/apps/api
 uv run uvicorn daari.main:app --port 8000 --reload
 ```
 
+**If that says "address already in use":** the older standalone `demo/backend`
+is probably still on :8000 from a previous session. Two choices — pick one and
+stick to it for the pitch:
+
+```bash
+lsof -nP -iTCP:8000 -sTCP:LISTEN          # see what is holding it
+pkill -f "uvicorn app.main:app"            # stop the old demo backend, then retry
+```
+
+or just run the real API somewhere else and use that port everywhere:
+
+```bash
+uv run uvicorn daari.main:app --port 8010 --reload
+```
+
+The old `demo/backend` and this API are **different services with different
+route shapes** (`/profiles` and `/jobs` there, `/personas` and `/match` here).
+`demo/frontend/index.html` calls the old one. Do not point it at this API
+without changing its fetch paths.
+
 Then open http://localhost:8000/docs — FastAPI's interactive docs. Every engine
 route is there with a **Try it out** button. That is a working backend you can
 demo from the browser with no frontend at all.
