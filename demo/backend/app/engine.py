@@ -27,12 +27,30 @@ def _closure(required: list[str], skills: dict) -> set[str]:
     return seen
 
 
+def _why(n: str, closure: set[str], direct_required: set[str], skills: dict, role_label: str) -> list[str]:
+    """A real, computed reason — not invented copy. Either the role names this
+    skill directly, or some other skill in the same closure needs it."""
+    reasons = []
+    if n in direct_required:
+        reasons.append(f"Required for {role_label}")
+    dependents = sorted(
+        m for m in closure if m != n and n in skills[m]["requires"]
+    )
+    for m in dependents[:2]:
+        reasons.append(f"Needed for {skills[m]['label_en']}")
+    if not reasons:
+        reasons.append(f"On the path to {role_label}")
+    return reasons
+
+
 def compute_roadmap(held: list[str], goal: str, skills: dict = SKILLS, roles: dict = ROLES) -> dict:
     if goal not in roles:
         raise ValueError(f"unknown goal role: {goal!r}")
     role = roles[goal]
     held_set = set(held)
-    missing = _closure(role["required_skills"], skills) - held_set
+    direct_required = set(role["required_skills"])
+    closure = _closure(role["required_skills"], skills)
+    missing = closure - held_set
 
     # Kahn's algorithm over the subgraph induced by `missing`, so an already-held
     # skill can't block ordering. Ties broken by hours then id — deterministic.
@@ -57,14 +75,32 @@ def compute_roadmap(held: list[str], goal: str, skills: dict = SKILLS, roles: di
             "label": skills[n]["label_en"],
             "hours": skills[n]["hours"],
             "requires": skills[n]["requires"],
+            "why": _why(n, closure, direct_required, skills, role["label_en"]),
+            "source": skills[n]["source"],
         }
         for n in ordered
+    ]
+    graph_nodes = [
+        {
+            "skill": n,
+            "label": skills[n]["label_en"],
+            "hours": skills[n]["hours"],
+            "held": n in held_set,
+        }
+        for n in sorted(closure)
+    ]
+    graph_edges = [
+        {"from": r, "to": n}
+        for n in closure
+        for r in skills[n]["requires"]
+        if r in closure
     ]
     return {
         "goal": goal,
         "goal_label": role["label_en"],
         "steps": steps,
         "total_hours": sum(s["hours"] for s in steps),
+        "graph": {"nodes": graph_nodes, "edges": graph_edges},
     }
 
 
