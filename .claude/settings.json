@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(uv:*)", "Bash(pnpm:*)", "Bash(npm view:*)", "Bash(npx:*)", "Bash(git:*)", "Bash(gh:*)",
+      "Bash(docker:*)", "Bash(docker compose:*)", "Bash(ollama:*)", "Bash(vercel:*)", "Bash(hf:*)",
+      "Bash(python3:*)", "Bash(curl:*)", "Bash(make:*)", "Bash(ruff:*)", "Bash(pytest:*)",
+      "Read(**)", "Edit(**)", "Write(**)"
+    ],
+    "deny": [
+      "Read(./.env)", "Edit(./.env)", "Write(./.env)",
+      "Bash(git push --force:*)", "Bash(rm -rf /:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/stop-gate.sh" }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-guard.sh" }]
+      }
+    ]
+  }
+}
