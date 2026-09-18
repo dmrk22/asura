@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 
 export default async function Home() {
   const locale = await getLocale();
@@ -31,6 +32,12 @@ export default async function Home() {
         />
         {t("status")}
       </p>
+      <Link
+        href="/onboard"
+        className="mt-4 rounded-md bg-signal px-5 py-2.5 text-bone"
+      >
+        {t("openDemo")}
+      </Link>
     </main>
   );
 }

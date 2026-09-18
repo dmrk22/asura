@@ -3,7 +3,57 @@
 Spec: `DAARI_BUILD_PLAN.md` **v6, 18 Sep 2026**. Build order + cut lines: §13. Repo layout: §6.
 Updated 2026-09-18 by `/setup` (re-run against v6).
 
-## Now
+## Now — the demo is retired, the real stack is the product
+
+**Plan:** `~/.claude/plans/now-keep-the-demo-foamy-sifakis.md`, executed in full (GO 1 + GO 2).
+**Not yet committed** — working tree only, per the standing rule (commit/push only on request).
+Everything below was measured against a running server, not asserted.
+
+### What's real and live now
+
+| Engine (`packages/core/daari_core/`) | Proof |
+|---|---|
+| `scam.py` — rules-first Scam Shield, 6 weighted rules, every reason a quoted substring | 125 core tests; **live catch**: a real Remotive listing ("Inside Sales Contractor", OTE $25k–$35k) scored 0.40/`check` with quoted reasons `pay_out_of_band: "25"`, `urgency_no_interview: "unlimited earning"` — screenshotted at `apps/web/tests/screenshots/leads-live-on-en-1440.png` |
+| `eligibility.py` — 3-state Kleene evaluator, `unknown` never collapses to qualifies | hypothesis + exhaustive Kleene-table tests |
+| `geo.py` — haversine | tested against known city pairs |
+| `assess.py` — 1PL Rasch CAT (`start`/`next_item`/`update`/`should_stop`) | hypothesis: SE non-increasing, all-correct → θ≥+1, always terminates ≤6 items; **live 6-item loop run against the server**, SE fell 1.414→0.768, hard-stopped at item 6 |
+
+| API (`apps/api/daari/`) | Proof |
+|---|---|
+| `llm/chain.py` — Gemini→Groq→Ollama→cache, sha256-cached, circuit breaker, structlog | `/health` shows gemini + groq `ok` |
+| `fetchers/{remotive,adzuna,myscheme,nominatim}.py` | **live**: real Adzuna/Remotive jobs, real myscheme.gov.in schemes (KALIA, POMIS, …), real Nominatim geocode for Guntur — all via `GET /leads/live`, `GET /schemes`, `GET /geocode` |
+| `POST /match` `live: bool` | merges live + seed, reports `live_count`/`seed_count`/`live_errors`, every card carries a `scam` verdict |
+| `POST /assess/next`, `POST /assess/answer` | stateless CAT over the real 26-item bank (`data/items/items.yaml`), server-side grading, never leaks the answer |
+| `data/sources.yaml` | the one place a source is named; myscheme's public `x-api-key` lives here for the fetcher (note: `main.py:39`'s `/health` probe keeps its own copy of the same public key for its liveness check — duplicated, not a secret, not consolidated this hour) |
+
+| Web (`apps/web/`) — **the Next app is the product now, not a wordmark** | Proof |
+|---|---|
+| `/onboard`, `/path`, `/leads`, `/evidence` | pnpm typecheck/lint/test/build all green; screenshots in `apps/web/tests/screenshots/` at 1440px + 390px, en + te, incl. the live-scam catch above |
+| `/path` | real d3-force graph, Before\|After panes for both "Simulate skill update" and "Market shock", **shows `requested_weight` vs `applied_weight`** (the 50×→2× clamp) |
+| `/leads` | live-listings toggle, match% + full component breakdown, amber missing-skill chips, ScamBadge (renders nothing when clear — a badge without reasons is a bug), `source`+`fetched_at` in mono on every card, `safeHref()` guards against a non-http(s) `source_url` |
+| i18n | en/te/hi key parity enforced by test; Telugu/Hindi hand-translated, not machine-copied |
+
+**Adzuna key**: was 401 at session start (truncated paste); human re-pasted it mid-session; `/health` now reports `adzuna: ok` and `/leads/live` returns real Adzuna listings.
+
+**Security findings from the background reviewer, fixed in-session:**
+1. `fetchers/adzuna.py` was about to leak the credentialed request URL into the public `source_url` field and hand-concatenate its query string. Fixed: `source_url` is always Adzuna's own `redirect_url` or a credential-free public search link; requests use `httpx params=`. Regression tests added.
+2. `apps/web` leads page rendered a fetcher-sourced `source_url` straight into `<a href>` (a `javascript:` XSS vector). Fixed with `safeHref()` — non-http(s) URLs render as plain text, never a link.
+
+### Explicitly not done this hour (say so, don't hide it — non-negotiable 9)
+- **No `/assess` or `/schemes` UI screens.** The engines and routes are real, tested, and live-verified by curl (see above); nobody has wrapped them in a screen yet. This is the single biggest remaining gap between "claimed" and "on screen."
+- Eligibility's LLM predicate-AST extraction from scheme text (`extract_rules.py`) was **not built** — `eligibility.evaluate()` is real and tested but has no live scheme feeding it yet. Cut consciously to protect the hour; matches §13 spirit even though it isn't a numbered cut line.
+- Voice/ASR/TTS, interview coach, prep-from-notice, agent trace drawer UI, grounding verifier's LLM pass, SerpAPI — all still not built, unchanged from before this session (see the old P2/P3+ table below).
+- `demo/` was **retired from running** (its two processes on :3000/:8000 killed, `.claude/launch.json` repointed at the real stack) but the directory itself was left on disk, unserved — deleting it wasn't this hour's risk to take.
+
+### How to run it
+```
+cd apps/api && uv run uvicorn daari.main:app --port 8000 --reload   # real engine, real fetchers
+cd apps/web && pnpm dev --port 3000                                  # real product
+```
+Both were left running on their standard ports at the end of this session.
+
+---
+
 **P2 partial — the backend serves the real engine. Roadmap, Before | After, Market shock and the matcher are live over HTTP.**
 
 Added 2026-09-18 ~04:00, after the remote was found to be 9 commits stale (see below):

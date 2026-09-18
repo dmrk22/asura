@@ -20,7 +20,9 @@
 }
 
 html {
-  color-scheme: light dark;
+  /* Light only, deliberately (see styles/tokens.css) — don't let native
+     form controls (checkboxes, scrollbars) render dark on their own. */
+  color-scheme: light;
 }
 
 body {

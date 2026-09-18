@@ -1,0 +1,57 @@
+# data/sources.yaml — the ONLY config that may name a source (data.md,
+# CLAUDE.md non-negotiable 2). Verified live 2026-09-18 (see .claude/state/scratch-api.md).
+#
+# The myscheme x-api-key below is the site's own public browser key (it ships
+# in myscheme.gov.in's client-side JS bundle) — it is site config, not a
+# secret, per docs/DECISIONS.md D10. It does not belong in .env.
+#
+# Glassdoor is never fetched: its ToS forbids scraping (CLAUDE.md
+# non-negotiable 13, rules/data.md). It has no entry here, deliberately.
+
+- id: remotive
+  type: job
+  url_template: "https://remotive.com/api/remote-jobs?limit={limit}"
+  parser: remotive
+  refresh_s: 900
+  tos_note: >
+    Public JSON API, no key required. Requires a browser User-Agent — a
+    default python/urllib or bare httpx UA gets Cloudflare `error code: 1010`.
+
+- id: adzuna
+  type: job
+  url_template: "https://api.adzuna.com/v1/api/jobs/in/search/1?app_id={app_id}&app_key={app_key}&results_per_page={limit}&what={q}"
+  parser: adzuna
+  refresh_s: 900
+  tos_note: >
+    Free tier, keyed (app_id + app_key from the Adzuna developer console).
+    Currently returning 401 AUTH_FAIL while the key is re-pasted into .env —
+    the fetcher must degrade to an empty list plus an error string, never crash.
+
+- id: myscheme
+  type: scheme
+  url_template: "https://api.myscheme.gov.in/search/v6/schemes?lang=en&q=%5B%5D&keyword={keyword}&sort=&from=0&size={limit}"
+  parser: myscheme
+  refresh_s: 900
+  x_api_key: "tYTy5eEhlu9rFjyxuCr7ra7ACp4dv1RH8gWuHTDc"
+  tos_note: >
+    Public government scheme search. Needs all three of x-api-key (this
+    public browser key, not a secret), a browser User-Agent, and
+    Referer: https://www.myscheme.gov.in/. v4 and v5 now return 500 — v6 only.
+
+- id: nominatim
+  type: geo
+  url_template: "https://nominatim.openstreetmap.org/search?q={q}&format=jsonv2&limit={limit}"
+  parser: nominatim
+  refresh_s: 900
+  tos_note: >
+    OpenStreetMap Nominatim usage policy: 1 req/s max, a contact-identifying
+    User-Agent required, results cached rather than re-fetched.
+
+- id: glassdoor
+  type: job
+  url_template: null
+  parser: null
+  refresh_s: null
+  tos_note: >
+    NEVER FETCHED. Glassdoor's ToS forbids scraping (CLAUDE.md non-negotiable
+    13). This entry exists only to record the exclusion explicitly.
