@@ -15,13 +15,21 @@ from __future__ import annotations
 
 from typing import Literal
 
+from daari_core import assess as assess_engine
 from daari_core import roadmap as roadmap_engine
+from daari_core import scam as scam_engine
 from daari_core import telemetry
 from daari_core.match import Candidate, match
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from daari.fetchers import adzuna as adzuna_fetcher
+from daari.fetchers import myscheme as myscheme_fetcher
+from daari.fetchers import nominatim as nominatim_fetcher
+from daari.fetchers import remotive as remotive_fetcher
+from daari.items_loader import get_item_bank
 from daari.leads import get_candidates, get_personas
+from daari.skills_map import map_text_to_skills
 from daari.taxonomy_loader import get_taxonomy
 
 router = APIRouter()
@@ -53,6 +61,30 @@ class MatchRequest(BaseModel):
     held: dict[str, int] = Field(default_factory=dict)
     districts: list[str] = Field(default_factory=list)
     demand: dict[str, float] = Field(default_factory=dict)
+    persona: Literal["student", "rural"] = "student"
+    live: bool = False
+
+
+class AssessStateModel(BaseModel):
+    """The CAT session state travels with the client, same pattern as
+    `held` on the roadmap routes — no server-side session table needed for
+    this hour's scope."""
+
+    theta: float = 0.0
+    se: float | None = None
+    answered: list[tuple[str, bool]] = Field(default_factory=list)
+
+
+class AssessNextRequest(BaseModel):
+    state: AssessStateModel | None = None
+    skill_id: str | None = None
+    persona: Literal["student", "rural"] = "student"
+
+
+class AssessAnswerRequest(BaseModel):
+    state: AssessStateModel
+    item_id: str
+    given_answer: str
     persona: Literal["student", "rural"] = "student"
 
 
@@ -108,6 +140,20 @@ def _diff_json(d: roadmap_engine.Diff) -> dict:
 
 
 def _candidate_json(c: Candidate) -> dict:
+    # Scam Shield (safety.md guard 3): scored from whatever text the listing
+    # actually carries (title/org/pay/source_url, plus description for live
+    # listings via `extra`). A badge without reasons is a bug, so the reasons
+    # travel with the score, not just the number.
+    listing_text = {
+        "title": c.title,
+        "org": c.org,
+        "pay": c.pay or "",
+        "source_url": c.source_url,
+        "description": c.extra.get("description", ""),
+        "contact": c.extra.get("contact", ""),
+        "apply_url": c.extra.get("apply_url", ""),
+    }
+    result = scam_engine.score(listing_text)
     return {
         "id": c.id,
         "title": c.title,
@@ -120,6 +166,13 @@ def _candidate_json(c: Candidate) -> dict:
         "source_url": c.source_url,
         "fetched_at": c.fetched_at,
         "is_live": c.extra.get("is_live", False),
+        "scam": {
+            "score": result.score,
+            "band": result.band,
+            "reasons": [
+                {"rule": r.rule, "weight": r.weight, "quote": r.quote} for r in result.reasons
+            ],
+        },
     }
 
 
@@ -251,21 +304,71 @@ def market_shock(req: ShockRequest) -> dict:
     }
 
 
+def _live_candidate(record: dict) -> Candidate | None:
+    """A live listing that maps to no taxonomy skill can't be scored against
+    a held-skills profile, so it's dropped here rather than reaching
+    `match()` with an empty `required_skills` (which would look like "fully
+    covered" — a false positive, not an honest "no data")."""
+    skills = map_text_to_skills(f"{record.get('title', '')} {record.get('description', '')}")
+    if not skills:
+        return None
+    return Candidate(
+        id=record["id"],
+        title=record.get("title", ""),
+        org=record.get("org", ""),
+        location=record.get("location", ""),
+        required_skills=skills,
+        source=record["source"],
+        source_url=record["source_url"],
+        fetched_at=record["fetched_at"],
+        pay=record.get("pay"),
+        extra={"is_live": True, "description": record.get("description", "")},
+    )
+
+
 @router.post("/match")
-def match_leads(req: MatchRequest) -> dict:
+async def match_leads(req: MatchRequest) -> dict:
     _validate(req.held)
     demand = _clean_demand(req.demand)
     telemetry.count(req.persona, "match")
 
-    candidates = get_candidates()
+    seed_candidates = list(get_candidates())
+    live_candidates: list[Candidate] = []
+    live_errors: dict[str, str] = {}
+
+    if req.live:
+        remotive_records, remotive_err = await remotive_fetcher.fetch(limit=20)
+        adzuna_records, adzuna_err = await adzuna_fetcher.fetch(limit=20)
+        if remotive_err:
+            live_errors["remotive"] = remotive_err
+        if adzuna_err:
+            live_errors["adzuna"] = adzuna_err
+        for record in remotive_records + adzuna_records:
+            candidate = _live_candidate(record)
+            if candidate is not None:
+                live_candidates.append(candidate)
+
+    candidates = seed_candidates + live_candidates
     results = match(
         get_taxonomy(),
         held=req.held,
-        candidates=list(candidates),
+        candidates=candidates,
         demand=demand,
         districts=tuple(req.districts),
     )
     by_id = {c.id: c for c in candidates}
+
+    if req.live:
+        provenance_note = (
+            f"{len(live_candidates)} live listing(s) merged with {len(seed_candidates)} seed listing(s). "
+            "Every card keeps its source and fetched_at."
+        )
+    else:
+        provenance_note = (
+            "Seed listings, not a live fetch. Every card keeps its source and fetched_at. "
+            "Pass live=true to merge in Adzuna / Remotive."
+        )
+
     return {
         "matches": [
             {
@@ -278,13 +381,75 @@ def match_leads(req: MatchRequest) -> dict:
             for m in results
         ],
         "count": len(results),
-        "live": False,
-        "provenance_note": (
-            "Seed listings, not a live fetch. Every card keeps its source and fetched_at. "
-            "Live fetchers (Adzuna / Remotive / SerpAPI) land in P3."
-        ),
+        "live": req.live,
+        "live_count": len(live_candidates),
+        "seed_count": len(seed_candidates),
+        "live_errors": live_errors,
+        "provenance_note": provenance_note,
         "persona": req.persona,
     }
+
+
+@router.get("/leads/live")
+async def leads_live(q: str = "", limit: int = 10) -> dict:
+    """Live job listings (Remotive + Adzuna when its key works), mapped
+    through `skills_map` so every card's `required_skills` are taxonomy ids.
+    Never crashes when a source is down — that source's error surfaces in
+    `errors` instead."""
+    remotive_records, remotive_err = await remotive_fetcher.fetch(limit=limit)
+    adzuna_records, adzuna_err = await adzuna_fetcher.fetch(q=q, limit=limit)
+
+    records = remotive_records + adzuna_records
+    if q:
+        needle = q.lower()
+        records = [r for r in records if needle in f"{r.get('title', '')} {r.get('description', '')}".lower()]
+
+    cards = []
+    for record in records[:limit]:
+        candidate = Candidate(
+            id=record["id"],
+            title=record.get("title", ""),
+            org=record.get("org", ""),
+            location=record.get("location", ""),
+            required_skills=map_text_to_skills(
+                f"{record.get('title', '')} {record.get('description', '')}"
+            ),
+            source=record["source"],
+            source_url=record["source_url"],
+            fetched_at=record["fetched_at"],
+            pay=record.get("pay"),
+            extra={"is_live": True, "description": record.get("description", "")},
+        )
+        # Same shaping + Scam Shield as /match's cards — one card shape, everywhere.
+        cards.append(_candidate_json(candidate))
+
+    errors = {k: v for k, v in {"remotive": remotive_err, "adzuna": adzuna_err}.items() if v}
+    return {"leads": cards, "count": len(cards), "errors": errors}
+
+
+@router.get("/schemes")
+async def schemes_live(q: str = "", limit: int = 10) -> dict:
+    """Live myscheme.gov.in scheme search, stamped with source and fetched_at.
+    Never crashes when myscheme is down — its error surfaces in `error`."""
+    records, error = await myscheme_fetcher.fetch(q=q, limit=limit)
+    return {"schemes": records, "count": len(records), "error": error}
+
+
+@router.get("/geocode")
+async def geocode(q: str) -> dict:
+    """Live Nominatim geocode for one place name. Never crashes when
+    Nominatim is down or the place isn't found — `error` surfaces why."""
+    records, error = await nominatim_fetcher.fetch(q=q, limit=1)
+    if not records:
+        return {
+            "lat": None,
+            "lon": None,
+            "display_name": None,
+            "source": "nominatim",
+            "fetched_at": None,
+            "error": error or "not_found",
+        }
+    return {**records[0], "error": None}
 
 
 @router.get("/evidence")
@@ -299,5 +464,78 @@ def evidence() -> dict:
             "note": "Both persona routes call the same daari_core functions; no route holds its own matcher.",
         },
         "taxonomy": {"skills": len(tx.skills), "roles": len(tx.roles)},
-        "leads": {"count": len(get_candidates()), "live": False},
+        "leads": {
+            "count": len(get_candidates()),
+            "live": False,
+            "note": "GET /leads/live and POST /match(live=true) merge Remotive/Adzuna listings",
+        },
+    }
+
+
+# --- assessment (§7.6 Rasch 1PL CAT) ------------------------------------
+
+
+def _state_to_engine(s: AssessStateModel) -> assess_engine.AssessState:
+    if s.se is None:
+        return assess_engine.start(theta0=s.theta)
+    return assess_engine.AssessState(theta=s.theta, se=s.se, answered=tuple(s.answered))
+
+
+def _state_to_json(s: assess_engine.AssessState) -> dict:
+    return {"theta": round(s.theta, 4), "se": round(s.se, 4), "answered": list(s.answered)}
+
+
+@router.post("/assess/next")
+def assess_next(req: AssessNextRequest) -> dict:
+    """The next CAT item at max Fisher information for the current theta, or
+    `done: true` once the stopping rule (§7.5) fires. Never returns the
+    item's `answer` — that would let the client cheat its own ability
+    estimate."""
+    state = _state_to_engine(req.state) if req.state else assess_engine.start()
+    telemetry.count(req.persona, "assess")
+
+    bank = get_item_bank()
+    if req.skill_id is not None:
+        bank = tuple(i for i in bank if i.skill_id == req.skill_id)
+        if not bank:
+            raise HTTPException(404, f"no items for skill_id {req.skill_id!r}")
+
+    if assess_engine.should_stop(state):
+        return {"done": True, "state": _state_to_json(state), "item": None}
+
+    exclude = frozenset(item_id for item_id, _ in state.answered)
+    item = assess_engine.next_item(state, bank, exclude=exclude)
+    if item is None:
+        return {"done": True, "state": _state_to_json(state), "item": None}
+
+    return {
+        "done": False,
+        "state": _state_to_json(state),
+        "item": {
+            "id": item.id,
+            "skill_id": item.skill_id,
+            "text": item.text,
+            "source": item.source,
+        },
+    }
+
+
+@router.post("/assess/answer")
+def assess_answer(req: AssessAnswerRequest) -> dict:
+    """Grades server-side against the item bank's own answer — the client
+    only ever sends what it typed, never a correctness verdict."""
+    bank = {i.id: i for i in get_item_bank()}
+    item = bank.get(req.item_id)
+    if item is None:
+        raise HTTPException(404, f"unknown item id: {req.item_id!r}")
+
+    state = _state_to_engine(req.state)
+    correct = req.given_answer.strip().casefold() == item.answer.strip().casefold()
+    new_state = assess_engine.update(state, item, correct)
+    telemetry.count(req.persona, "assess_answer")
+
+    return {
+        "correct": correct,
+        "state": _state_to_json(new_state),
+        "done": assess_engine.should_stop(new_state),
     }

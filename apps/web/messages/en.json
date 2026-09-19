@@ -1,9 +1,65 @@
 {
   "brand": {
     "wordmark": "DAARI",
-    "status": "DAARI · online"
+    "status": "DAARI · online",
+    "openDemo": "Open demo"
   },
   "nav": {
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "mic": "Voice input (coming soon)",
+    "brand": "DAARI",
+    "primaryNav": "Main",
+    "onboard": "Onboard",
+    "path": "Path",
+    "leads": "Leads",
+    "evidence": "Evidence"
+  },
+  "onboard": {
+    "title": "Who are you today?",
+    "subtitle": "Pick a synthetic persona to see the same engine route two different people.",
+    "personaLabel": "Persona",
+    "loadError": "Could not load personas from the engine.",
+    "synthetic": "synthetic",
+    "goal": "Goal",
+    "district": "District",
+    "language": "Language",
+    "constraints": "Constraints",
+    "constraintsPlaceholder": "e.g. weekends only, no travel",
+    "continue": "Continue to path"
+  },
+  "path": {
+    "title": "Path",
+    "goalLine": "Goal: {goal}",
+    "totalHours": "total hours",
+    "weeksAt10": "weeks @ 10h/wk",
+    "loading": "Loading roadmap…",
+    "loadError": "Could not load the roadmap. Go back and pick a persona.",
+    "actionError": "The engine did not respond. Try again.",
+    "steps": "Steps",
+    "goalReached": "Goal already reached — every required skill is held.",
+    "learnedThis": "I learned this",
+    "simulateTitle": "Simulate skill update",
+    "shockTitle": "Market shock",
+    "apply": "Apply",
+    "diffTitle": "Before | After"
+  },
+  "leads": {
+    "title": "Leads",
+    "loadError": "Could not load leads from the engine.",
+    "empty": "No matches yet — learn a skill on /path and check back.",
+    "components": "Score breakdown",
+    "source": "source",
+    "fetchedAt": "fetched_at",
+    "viewListing": "View listing",
+    "liveToggle": "Include live listings (Adzuna / Remotive)",
+    "seedNoListing": "seed listing — no live posting"
+  },
+  "evidence": {
+    "title": "Evidence",
+    "loadError": "Could not load evidence from the engine.",
+    "importGraph": "Shared engine",
+    "callsByPersona": "Calls by persona",
+    "taxonomy": "Taxonomy",
+    "leads": "Leads"
   }
 }

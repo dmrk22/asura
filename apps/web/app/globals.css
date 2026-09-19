@@ -8,6 +8,7 @@
   --color-signal: var(--signal);
   --color-sage: var(--sage);
   --color-amber: var(--amber);
+  --color-brand: var(--brand);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -20,7 +21,9 @@
 }
 
 html {
-  color-scheme: light dark;
+  /* Light only, deliberately (see styles/tokens.css) — don't let native
+     form controls (checkboxes, scrollbars) render dark on their own. */
+  color-scheme: light;
 }
 
 body {

@@ -1,40 +1,39 @@
 import type { Metadata } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Instrument_Serif,
-  Noto_Sans_Devanagari,
-  Noto_Sans_Telugu,
-  Noto_Serif_Telugu,
-} from "next/font/google";
+import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { AppHeader } from "@/components/AppHeader";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
-const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
-const geistMono = Geist_Mono({
+// Committed font files keep production builds and the unplugged demo free of
+// external Google Fonts requests. `next/font/local` still optimizes and
+// self-hosts them in the built application.
+const geist = localFont({
+  src: "../../fonts/geist-latin.woff2",
+  variable: "--font-geist",
+});
+const geistMono = localFont({
+  src: "../../fonts/geist-mono-latin.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
-const instrumentSerif = Instrument_Serif({
+const instrumentSerif = localFont({
+  src: "../../fonts/instrument-serif-italic.woff2",
   variable: "--font-instrument-serif",
-  weight: "400",
-  subsets: ["latin"],
+  style: "italic",
 });
-const notoSansTelugu = Noto_Sans_Telugu({
+const notoSansTelugu = localFont({
+  src: "../../fonts/noto-sans-telugu.woff2",
   variable: "--font-noto-sans-telugu",
-  subsets: ["telugu"],
 });
-const notoSerifTelugu = Noto_Serif_Telugu({
+const notoSerifTelugu = localFont({
+  src: "../../fonts/noto-serif-telugu.ttf",
   variable: "--font-noto-serif-telugu",
-  subsets: ["telugu"],
 });
-const notoSansDevanagari = Noto_Sans_Devanagari({
+const notoSansDevanagari = localFont({
+  src: "../../fonts/noto-sans-devanagari.ttf",
   variable: "--font-noto-sans-devanagari",
-  subsets: ["devanagari"],
 });
 
 export const metadata: Metadata = {
@@ -64,9 +63,7 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-full flex-col bg-bone text-ink">
         <NextIntlClientProvider messages={messages}>
-          <header className="flex items-center justify-end border-graphite/20 border-b px-6 py-5">
-            <LanguageToggle />
-          </header>
+          <AppHeader />
           {children}
         </NextIntlClientProvider>
       </body>

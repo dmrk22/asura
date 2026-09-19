@@ -1,9 +1,65 @@
 {
   "brand": {
     "wordmark": "DAARI",
-    "status": "DAARI · ऑनलाइन"
+    "status": "DAARI · ऑनलाइन",
+    "openDemo": "डेमो खोलें"
   },
   "nav": {
-    "languageLabel": "भाषा"
+    "languageLabel": "भाषा",
+    "mic": "आवाज़ इनपुट (जल्द आ रहा है)",
+    "brand": "DAARI",
+    "primaryNav": "मुख्य मेनू",
+    "onboard": "ऑनबोर्ड",
+    "path": "पथ",
+    "leads": "अवसर",
+    "evidence": "प्रमाण"
+  },
+  "onboard": {
+    "title": "आज आप कौन हैं?",
+    "subtitle": "एक सिंथेटिक प्रोफ़ाइल चुनें — देखें कि एक ही इंजन दो अलग लोगों को कैसे मार्ग देता है।",
+    "personaLabel": "प्रोफ़ाइल",
+    "loadError": "इंजन से प्रोफ़ाइल लोड नहीं हो सकीं।",
+    "synthetic": "सिंथेटिक",
+    "goal": "लक्ष्य",
+    "district": "ज़िला",
+    "language": "भाषा",
+    "constraints": "सीमाएँ",
+    "constraintsPlaceholder": "जैसे, केवल सप्ताहांत, यात्रा नहीं",
+    "continue": "पथ पर जारी रखें"
+  },
+  "path": {
+    "title": "पथ",
+    "goalLine": "लक्ष्य: {goal}",
+    "totalHours": "कुल घंटे",
+    "weeksAt10": "सप्ताह @ 10घं/सप्ताह",
+    "loading": "रोडमैप लोड हो रहा है…",
+    "loadError": "रोडमैप लोड नहीं हो सका। वापस जाएँ और एक प्रोफ़ाइल चुनें।",
+    "actionError": "इंजन ने जवाब नहीं दिया। फिर कोशिश करें।",
+    "steps": "चरण",
+    "goalReached": "लक्ष्य पहले ही पूरा हो गया — हर आवश्यक कौशल मौजूद है।",
+    "learnedThis": "मैंने यह सीख लिया",
+    "simulateTitle": "कौशल अपडेट का अनुकरण करें",
+    "shockTitle": "मार्केट शॉक",
+    "apply": "लागू करें",
+    "diffTitle": "पहले | बाद में"
+  },
+  "leads": {
+    "title": "अवसर",
+    "loadError": "इंजन से अवसर लोड नहीं हो सके।",
+    "empty": "अभी कोई मिलान नहीं — /path पर एक कौशल सीखें और फिर देखें।",
+    "components": "स्कोर विवरण",
+    "source": "source",
+    "fetchedAt": "fetched_at",
+    "viewListing": "लिस्टिंग देखें",
+    "liveToggle": "लाइव लिस्टिंग शामिल करें (Adzuna / Remotive)",
+    "seedNoListing": "सीड लिस्टिंग — कोई लाइव पोस्टिंग नहीं"
+  },
+  "evidence": {
+    "title": "प्रमाण",
+    "loadError": "इंजन से प्रमाण लोड नहीं हो सका।",
+    "importGraph": "साझा इंजन",
+    "callsByPersona": "प्रोफ़ाइल अनुसार कॉल्स",
+    "taxonomy": "वर्गीकरण",
+    "leads": "अवसर"
   }
 }

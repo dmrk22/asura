@@ -2,7 +2,9 @@
  * DAARI design tokens — apps/web/styles/tokens.css
  * The ONLY place colours are defined. No hex literals in components.
  * Values verbatim from docs/UI_BRIEF.md §"Palette".
- * Dark mode flips --bone/--ink; --graphite/--signal/--sage/--amber unchanged.
+ * Light only, deliberately — no dark-mode variant. Do not reintroduce a
+ * `prefers-color-scheme: dark` or `[data-theme="dark"]` block here; the
+ * editorial-instrument look is paper/ink and is not meant to invert.
  * Flat colour only, no glassmorphism, no glow — shadows are a 1px hairline
  * plus a 4px blur at 8% opacity, at most.
  */
@@ -14,31 +16,10 @@
   --signal: oklch(0.62 0.2 30);
   --sage: oklch(0.68 0.08 150);
   --amber: oklch(0.78 0.15 80);
+  --brand: oklch(0.43 0.11 190);
 
   --background: var(--bone);
   --foreground: var(--ink);
 
   --shadow-hairline: 0 1px 4px oklch(0.18 0.01 60 / 0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bone: oklch(0.18 0.01 60);
-    --ink: oklch(0.965 0.006 85);
-
-    --background: var(--bone);
-    --foreground: var(--ink);
-
-    --shadow-hairline: 0 1px 4px oklch(0.965 0.006 85 / 0.08);
-  }
-}
-
-:root[data-theme="dark"] {
-  --bone: oklch(0.18 0.01 60);
-  --ink: oklch(0.965 0.006 85);
-
-  --background: var(--bone);
-  --foreground: var(--ink);
-
-  --shadow-hairline: 0 1px 4px oklch(0.965 0.006 85 / 0.08);
 }

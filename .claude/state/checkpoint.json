@@ -1,72 +1,50 @@
 {
-  "task_id": "p2-engine-backend",
-  "phase": "P2-engine (partial)",
-  "status": "backend serving the real engine; P2 remainder not started",
+  "task_id": "retire-demo-real-stack-deploy",
+  "phase": "GO1+GO2 done; deployed to Vercel",
+  "status": "real stack (scam/eligibility/geo/assess + live fetchers + LLM chain + real web screens) built, tested, retired the HTML demo, deployed to Vercel and live-verified",
   "project": "DAARI (Team ASURA), repo asura",
   "spec_version": "DAARI_BUILD_PLAN.md v6, 18 Sep 2026",
   "updated": "2026-09-18",
+  "plan_file": "~/.claude/plans/now-keep-the-demo-foamy-sifakis.md",
   "files_touched": [
-    "packages/core/daari_core/roadmap.py (new)",
-    "packages/core/daari_core/match.py (new)",
-    "packages/core/tests/test_roadmap.py, test_match.py (new)",
-    "apps/api/daari/routes.py, taxonomy_loader.py, leads.py (new)",
-    "apps/api/daari/main.py (+CORS, +router), config.py (+CORS_ORIGINS), pyproject.toml (+pyyaml==6.0.3)",
-    "apps/api/tests/test_routes.py (new)",
-    "data/leads/seed_jobs.yaml, data/personas/personas.yaml (new)",
-    "docs/STATE.md, docs/DECISIONS.md (D19, D20)"
+    "packages/core/daari_core/{scam,eligibility,geo,assess}.py + tests (new)",
+    "apps/api/daari/{http,items_loader,skills_map,sources_config}.py, fetchers/{remotive,adzuna,myscheme,nominatim}.py, llm/chain.py (new)",
+    "apps/api/daari/routes.py (+scam on every card, +/assess/next, +/assess/answer, +/leads/live, +/schemes, +/geocode, +live flag on /match)",
+    "apps/api/tests/{test_fetchers,test_skills_map,test_go2_wiring}.py (new)",
+    "data/sources.yaml (new)",
+    "apps/web/app/[locale]/{onboard,path,leads,evidence}/ (new screens), components/{AppHeader,MicButton,RoadmapDiff,ScamBadge,SkillGraph}.tsx (new), lib/ (new)",
+    "apps/web/styles/tokens.css, app/globals.css (dark mode removed, light-only)",
+    "apps/web/messages/{en,te,hi}.json (+leads.liveToggle, +leads.seedNoListing, i18n parity kept)",
+    ".claude/launch.json (repointed at real api/web, demo retired)",
+    "docs/STATE.md, docs/DECISIONS.md (D21-D23), docs/RUNBOOK.md (rewritten)"
   ],
   "commands_run": [
-    {
-      "cmd": "git push -u origin main",
-      "exit": 0,
-      "evidence": "a264545..e344b59; remote tree has zero nadi paths"
-    },
-    {
-      "cmd": "packages/core: uv run pytest -q",
-      "exit": 0,
-      "evidence": "63 passed, 1 skipped"
-    },
-    {
-      "cmd": "apps/api: uv run pytest -q",
-      "exit": 0,
-      "evidence": "25 passed"
-    },
-    {
-      "cmd": "ruff check (core, api)",
-      "exit": 0,
-      "evidence": "All checks passed"
-    },
-    {
-      "cmd": "uvicorn daari.main:app --port 8010 + smoke.py",
-      "exit": 0,
-      "evidence": "roadmap/learn/shock/match/evidence all 200 against a live process"
-    }
+    { "cmd": "packages/core: uv run pytest -q && ruff check .", "exit": 0, "evidence": "125 passed, 1 skipped, ruff clean" },
+    { "cmd": "apps/api: uv run pytest -q && ruff check .", "exit": 0, "evidence": "48 passed, ruff clean" },
+    { "cmd": "apps/web: pnpm typecheck && pnpm lint && pnpm test && pnpm build", "exit": 0, "evidence": "all green, i18n + tokens tests pass" },
+    { "cmd": "killed old demo processes on :3000/:8000 (ps -p confirmed identity first)", "exit": 0, "evidence": "3000 and 8000 free" },
+    { "cmd": "vercel deploy --prod (daari-api, from a scratchpad-staged minimal copy)", "exit": 0, "evidence": "https://daari-api.vercel.app live, /taxonomy /roadmap /match /leads/live /schemes /geocode /assess all 200 with real data" },
+    { "cmd": "vercel deploy --prod --build-env NEXT_PUBLIC_API_URL=https://daari-api.vercel.app (daari-web, apps/web in place)", "exit": 0, "evidence": "https://daari-web.vercel.app live, /onboard /path /leads /evidence + /te all 200, screenshots match local pixel-for-pixel numbers" }
   ],
   "evidence": {
-    "priya_roadmap": "310h / 31 weeks / 10 steps -> Data Analyst",
-    "ravi_roadmap": "150h / 15 weeks / 14 steps -> Delivery Executive",
-    "learn_sql_diff": "310h -> 270h, cause=learner, removed=[sql_querying]",
-    "market_shock": "requested 50x -> applied 2.0x clamped; python moved 13 -> 7; cause=market",
-    "evidence_counters": "student and rural both non-zero against one daari_core",
-    "leads": "10 seed listings, is_live=false, every card stamped",
-    "remote_in_sync": true
+    "scam_shield_live_catch": "a real Remotive listing scored 0.40/check with quoted reasons pay_out_of_band:\"25\", urgency_no_interview:\"unlimited earning\" — both locally and on the deployed API",
+    "cat_live_run": "6-item loop on sql_querying: SE 1.4142 -> 0.7680, hard-stopped at item 6",
+    "live_match": "POST /match live=true -> live_count:8, seed_count:10 merged and ranked by one unmodified daari_core.match",
+    "deployed_numbers_match_local": "Priya -> Data Analyst 310h/31wk/10 steps, identical on daari-web.vercel.app and localhost"
   },
   "blockers": [
-    "ADZUNA_APP_KEY (31 chars, needs 32) and SERPAPI_KEY (63, needs 64) still 401. Blocks live leads + real demand weights in P3, not the engine."
+    "Deployed daari-api has no GEMINI_API_KEY/GROQ_API_KEY/ADZUNA_APP_ID/ADZUNA_APP_KEY set (user must add via Vercel dashboard, Claude cannot read .env) — degrades gracefully (no_api_key/skipped), not a crash.",
+    "No /assess or /schemes UI screens yet — routes are real, tested, live-verified by curl; not wrapped in a screen. Biggest remaining gap.",
+    "schemes/extract_rules.py (LLM -> predicate AST for eligibility.evaluate()) not built — cut consciously, D23."
   ],
   "human_todo": [
-    "Re-paste ADZUNA_APP_KEY and SERPAPI_KEY",
-    "Install Microsoft Edge (demo browser, te-IN TTS fallback)",
-    "Restart Claude Code once so the fixed agent definitions load",
-    "Optional: ollama pull llama3.1:8b",
-    "Test the wired mic in the hall",
-    "Bring one redacted placement notice",
-    "Data-lane review of the te/hi strings"
+    "Add GEMINI_API_KEY, GROQ_API_KEY, ADZUNA_APP_ID, ADZUNA_APP_KEY to the daari-api Vercel project (Settings > Environment Variables), then ask for a redeploy",
+    "Decide whether to keep both localhost dev servers and the Vercel deploy running, or retire one",
+    "Merge/PR the pushed branch into main when ready"
   ],
-  "next_action": "/go - planner writes docs/superpowers/plans/phase-2-engine.md for the P2 remainder (CAT, demand, eligibility, scam, tool registry); the roadmap+match half is done and pushed.",
+  "next_action": "If continuing: build /assess and /schemes UI screens, or extract_rules.py for live eligibility. Otherwise this phase is complete and deployed.",
   "deferred_to_go": [
-    "P2 remainder: assess.py (Rasch CAT), demand.py (PMI), eligibility.py, scam.py, agent tool registry.",
-    "Seed listings' required_skills levels are copied from each skill node's own level; set them per listing (data lane) \u2014 see DECISIONS D19.",
-    "apps/api runs on 8010 during this session; :8000 still holds the older standalone demo/backend. Decide which owns 8000 before the pitch."
+    "Voice/ASR/TTS, /ws/voice, interview coach + feedback guard, prep-from-notice, agent trace drawer UI, grounding verifier's LLM pass, SerpAPI, demand.py (PMI from live listings) — unchanged, still not built.",
+    "demo/ directory left on disk, unserved — deleting it wasn't taken as this session's risk."
   ]
 }
