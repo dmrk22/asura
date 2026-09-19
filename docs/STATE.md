@@ -9,6 +9,14 @@ Updated 2026-09-18 by `/setup` (re-run against v6).
 **Not yet committed** — working tree only, per the standing rule (commit/push only on request).
 Everything below was measured against a running server, not asserted.
 
+**Repair audit — 2026-09-20:** core (125 passed, 1 skipped) and API (48
+passed) test/lint suites are green. The web app now self-hosts its committed
+font assets, including Hindi's Noto Sans Devanagari, so it no longer requires
+Google Fonts while building or in the unplugged demo. `pnpm build` uses Next's
+webpack mode: Turbopack repeatedly stalled before compilation on this host,
+while webpack completed the identical production build. Web typecheck, lint,
+unit tests, and that production build are green under Node 22 LTS.
+
 ### What's real and live now
 
 | Engine (`packages/core/daari_core/`) | Proof |
