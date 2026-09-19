@@ -10,7 +10,10 @@ export function AppHeader() {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-graphite/20 border-b px-6 py-5">
       <div className="flex items-center gap-6">
-        <Link href="/" className="font-display text-xl italic leading-none">
+        <Link
+          href="/"
+          className="font-ui text-sm font-semibold uppercase tracking-[0.28em] text-brand transition-colors hover:text-ink"
+        >
           {t("brand")}
         </Link>
         <nav

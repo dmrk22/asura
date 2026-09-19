@@ -16,6 +16,7 @@
   --signal: oklch(0.62 0.2 30);
   --sage: oklch(0.68 0.08 150);
   --amber: oklch(0.78 0.15 80);
+  --brand: oklch(0.43 0.11 190);
 
   --background: var(--bone);
   --foreground: var(--ink);
