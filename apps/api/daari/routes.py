@@ -228,6 +228,7 @@ def taxonomy() -> dict:
                 "label_en": n.label_en,
                 "label_te": n.label_te,
                 "label_hi": n.label_hi,
+                "aliases": list(n.aliases),
                 "level": n.level,
                 "hours": n.hours,
                 "prereqs": list(n.prereqs),

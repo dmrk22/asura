@@ -2,19 +2,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Run the full interactive demo (web app **and** API) with one command:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd apps/web
+pnpm demo
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000/en/onboard](http://localhost:3000/en/onboard). Keep that
+terminal open: a `localhost` address works only while its local server is running.
+
+`pnpm demo` starts both services required by the product:
+
+- the Next.js web interface on port 3000;
+- the DAARI API on port 8000, which powers roadmaps, leads, assessments, schemes,
+  interview feedback, and preparation plans.
+
+For web-only work, `pnpm dev` is still available, but API-backed features will require the API
+to be started separately.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

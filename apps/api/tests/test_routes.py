@@ -34,14 +34,27 @@ def test_taxonomy_returns_the_real_seed(client: TestClient):
     assert r.status_code == 200
     body = r.json()
     assert body["counts"]["skills"] == 24
-    assert body["counts"]["roles"] == 2
-    assert {role["id"] for role in body["roles"]} == {"data_analyst", "delivery_executive"}
+    assert body["counts"]["roles"] == 11
+    assert {role["id"] for role in body["roles"]} == {
+        "customer_support_executive",
+        "data_analyst",
+        "data_entry_operator",
+        "data_operations_associate",
+        "delivery_executive",
+        "delivery_operations_coordinator",
+        "digital_services_assistant",
+        "ecommerce_delivery_associate",
+        "field_sales_executive",
+        "retail_sales_associate",
+        "warehouse_packing_associate",
+    }
 
 
 def test_every_skill_ships_a_source_and_a_telugu_label(client: TestClient):
     for skill in client.get("/taxonomy").json()["skills"]:
         assert skill["source"], f"{skill['id']} has no source"
         assert skill["label_te"], f"{skill['id']} has no Telugu label"
+        assert isinstance(skill["aliases"], list), f"{skill['id']} has no aliases list"
 
 
 def test_personas_are_flagged_synthetic(client: TestClient):

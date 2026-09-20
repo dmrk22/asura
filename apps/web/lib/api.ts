@@ -21,6 +21,7 @@ export interface SkillNode {
   label_en: string;
   label_te: string;
   label_hi: string;
+  aliases: string[];
   level: number;
   hours: number;
   prereqs: string[];
