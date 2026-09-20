@@ -37,7 +37,7 @@ export default function VoicePage() {
   const [intent, setIntent] = useState<VoiceIntent | null>(null);
   const [name, setName] = useState("");
   const [stage, setStage] = useState<ConversationStage>("name");
-  const [assistantMessage, setAssistantMessage] = useState("");
+  const [assistantMessage, setAssistantMessage] = useState(() => t("welcome"));
   const [listening, setListening] = useState(false);
   const [supported, setSupported] = useState(true);
   const [startedAt, setStartedAt] = useState<number | null>(null);
@@ -79,8 +79,10 @@ export default function VoicePage() {
     speechSynthesis.cancel();
     const message = new SpeechSynthesisUtterance(text);
     message.lang = voiceLanguage();
-    message.rate = 0.98;
-    message.pitch = 0.84;
+    // A slightly faster, neutral delivery keeps the conversation professional
+    // without making the assistant hard to understand.
+    message.rate = 1.08;
+    message.pitch = 1;
     message.volume = 1;
     message.voice = preferredVoice();
     message.onend = () => after?.();
@@ -133,7 +135,7 @@ export default function VoicePage() {
   }
 
   function speakThenListen(message: string) {
-    speak(message, () => window.setTimeout(beginRecognition, 180));
+    speak(message, beginRecognition);
   }
 
   async function createRoadmap(confirmedIntent: VoiceIntent, userName: string) {
@@ -217,7 +219,7 @@ export default function VoicePage() {
   function start() {
     if (listening) return;
     if (stage === "name") {
-      speakThenListen(t("askName"));
+      speakThenListen(t("welcome"));
       return;
     }
     if (stage === "profile") {
