@@ -4,6 +4,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // The Next.js development-tools bubble is useful while building but is
+  // visual noise in a product demo. Runtime errors still surface normally.
+  devIndicators: false,
   // Same-origin proxy to the daari API: the browser calls `/api-proxy/*`
   // (no CORS involved, since it never leaves this origin) and the Next
   // server forwards it. `daari.main` doesn't ship a CORS middleware and
