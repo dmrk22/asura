@@ -12,7 +12,12 @@
     "onboard": "Onboard",
     "path": "Path",
     "leads": "Leads",
-    "evidence": "Evidence"
+    "evidence": "Evidence",
+    "assess": "Assess",
+    "schemes": "Schemes",
+    "voice": "Voice",
+    "interview": "Interview",
+    "prep": "Prep"
   },
   "onboard": {
     "title": "Who are you today?",
@@ -61,5 +66,58 @@
     "callsByPersona": "Calls by persona",
     "taxonomy": "Taxonomy",
     "leads": "Leads"
+  },
+  "assess": {
+    "title": "Skill assessment",
+    "subtitle": "One question at a time. Your estimate tightens after each answer.",
+    "answer": "Your answer",
+    "submit": "Check answer",
+    "next": "Next question",
+    "complete": "Assessment complete",
+    "ability": "ability estimate",
+    "error": "Could not continue the assessment."
+  },
+  "schemes": {
+    "title": "Scheme finder",
+    "subtitle": "Live results from MyScheme, stamped with their source and fetch time.",
+    "search": "Search schemes",
+    "searchButton": "Search",
+    "empty": "No live schemes found for this search.",
+    "eligibility": "Check eligibility",
+    "unknown": "Eligibility needs reviewed rules from this source.",
+    "source": "source",
+    "fetchedAt": "fetched_at",
+    "error": "Could not load live schemes."
+  },
+  "voice": {
+    "title": "Voice guide",
+    "subtitle": "Speak in Telugu, Hindi, or English. Your browser keeps the transcript on this device.",
+    "start": "Start listening",
+    "stop": "Stop listening",
+    "notSupported": "Voice recognition is not available in this browser.",
+    "reply": "Read reply aloud",
+    "placeholder": "Your spoken words appear here…",
+    "hud": "Latency HUD",
+    "agent": "Agent trace"
+  },
+  "interview": {
+    "title": "Interview coach",
+    "question": "Interview question",
+    "source": "Question source URL",
+    "transcript": "Your answer transcript",
+    "review": "Get evidence-bound feedback",
+    "feedback": "Feedback",
+    "followUp": "Follow-up",
+    "error": "Could not review this answer."
+  },
+  "prep": {
+    "title": "Placement prep",
+    "subtitle": "Paste a confirmed placement-notice link and date to create a focused plan.",
+    "date": "Interview date",
+    "notice": "Notice source URL",
+    "focus": "Focus topics, separated by commas",
+    "create": "Create prep plan",
+    "error": "Could not create a plan.",
+    "day": "Day"
   }
 }

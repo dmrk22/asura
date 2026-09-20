@@ -26,8 +26,17 @@ export function AppHeader() {
           <Link href="/path" className="text-graphite hover:text-ink">
             {t("path")}
           </Link>
+          <Link href="/assess" className="text-graphite hover:text-ink">
+            {t("assess")}
+          </Link>
           <Link href="/leads" className="text-graphite hover:text-ink">
             {t("leads")}
+          </Link>
+          <Link href="/schemes" className="text-graphite hover:text-ink">
+            {t("schemes")}
+          </Link>
+          <Link href="/interview" className="text-graphite hover:text-ink">
+            {t("interview")}
           </Link>
           <Link href="/evidence" className="text-graphite hover:text-ink">
             {t("evidence")}

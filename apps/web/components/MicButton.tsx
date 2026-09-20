@@ -1,17 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
-/** Present on every screen per UI_BRIEF — inert this hour, wired in a later phase. */
+/** A first-class entry point to the browser voice surface on every screen. */
 export function MicButton() {
   const t = useTranslations("nav");
   return (
-    <button
-      type="button"
+    <Link
+      href="/voice"
       aria-label={t("mic")}
       title={t("mic")}
-      disabled
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-graphite/30 text-graphite disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-graphite/30 text-graphite hover:border-signal hover:text-signal"
     >
       <svg
         width="16"
@@ -26,6 +26,6 @@ export function MicButton() {
         <path d="M5 10a7 7 0 0 0 14 0" />
         <path d="M12 17v4M9 21h6" strokeLinecap="round" />
       </svg>
-    </button>
+    </Link>
   );
 }

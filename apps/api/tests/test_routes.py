@@ -245,3 +245,39 @@ def test_evidence_counters_move_for_both_personas(client: TestClient):
     assert calls.get("rural", {}).get("roadmap", 0) > 0
     assert body["shared_engine"]["package"] == "daari_core"
     assert body["leads"]["live"] is False
+
+
+def test_eligibility_without_reviewed_rules_is_honest_unknown(client: TestClient):
+    body = client.post(
+        "/schemes/eligibility",
+        json={"source_url": "https://example.test/scheme", "fetched_at": "2026-09-20T00:00:00Z"},
+    ).json()
+    assert body["value"] == "unknown"
+    assert body["needs_rule_extraction"] is True
+
+
+def test_interview_feedback_is_anchored_to_the_transcript(client: TestClient):
+    transcript = "I built a dashboard for my class project."
+    body = client.post(
+        "/interview/review",
+        json={
+            "question": "Tell me about a project.",
+            "transcript": transcript,
+            "question_source_url": "https://example.test/question",
+        },
+    ).json()
+    assert body["feedback"]
+    assert all(item["quote"] in transcript for item in body["feedback"])
+
+
+def test_prep_makes_a_plan_from_a_confirmed_date(client: TestClient):
+    body = client.post(
+        "/prep",
+        json={
+            "interview_date": "2026-12-01",
+            "focus": ["SQL", "mock interview"],
+            "notice_source_url": "https://example.test/notice",
+        },
+    ).json()
+    assert body["days"]
+    assert body["notice_source_url"] == "https://example.test/notice"

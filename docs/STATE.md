@@ -47,10 +47,10 @@ unit tests, and that production build are green under Node 22 LTS.
 1. `fetchers/adzuna.py` was about to leak the credentialed request URL into the public `source_url` field and hand-concatenate its query string. Fixed: `source_url` is always Adzuna's own `redirect_url` or a credential-free public search link; requests use `httpx params=`. Regression tests added.
 2. `apps/web` leads page rendered a fetcher-sourced `source_url` straight into `<a href>` (a `javascript:` XSS vector). Fixed with `safeHref()` — non-http(s) URLs render as plain text, never a link.
 
-### Explicitly not done this hour (say so, don't hide it — non-negotiable 9)
-- **No `/assess` or `/schemes` UI screens.** The engines and routes are real, tested, and live-verified by curl (see above); nobody has wrapped them in a screen yet. This is the single biggest remaining gap between "claimed" and "on screen."
-- Eligibility's LLM predicate-AST extraction from scheme text (`extract_rules.py`) was **not built** — `eligibility.evaluate()` is real and tested but has no live scheme feeding it yet. Cut consciously to protect the hour; matches §13 spirit even though it isn't a numbered cut line.
-- Voice/ASR/TTS, interview coach, prep-from-notice, agent trace drawer UI, grounding verifier's LLM pass, SerpAPI — all still not built, unchanged from before this session (see the old P2/P3+ table below).
+### Product extension — 2026-09-20
+- **User-facing flows now exist** for `/assess`, `/schemes`, `/voice`, `/interview`, and `/prep`, in en/te/hi. The CAT is server-graded, scheme cards retain their live source/fetch stamp, browser voice uses the Web Speech API plus local speech synthesis, interview feedback is quote-bound to the candidate transcript, and placement prep schedules from a user-confirmed notice URL and date.
+- **Eligibility is intentionally still three-valued.** A live scheme with no reviewed predicate AST returns `unknown` and explains that rule extraction is required; it never says a person qualifies. `extract_rules.py` is the remaining pipeline join.
+- The browser voice surface is a functional zero-cost fallback, not the planned server-streamed Groq/edge-tts pipeline. Interview company-corpus ingestion, document parsing, live-demand calculation, server agent orchestration/trace persistence, grounding verifier, and SerpAPI remain future backend work.
 - `demo/` was **retired from running** (its two processes on :3000/:8000 killed, `.claude/launch.json` repointed at the real stack) but the directory itself was left on disk, unserved — deleting it wasn't this hour's risk to take.
 
 ### How to run it

@@ -168,6 +168,54 @@ export interface EvidenceResponse {
   leads: { count: number; live: boolean };
 }
 
+export interface AssessState {
+  theta: number;
+  se: number;
+  answered: [string, boolean][];
+}
+
+export interface AssessItem {
+  id: string;
+  skill_id: string;
+  text: string;
+  source: string;
+}
+
+export interface Scheme {
+  id: string;
+  name: string;
+  description: string;
+  ministry: string;
+  source: string;
+  source_url: string;
+  fetched_at: string;
+  is_live: boolean;
+}
+
+export interface EligibilityResponse {
+  value: "true" | "false" | "unknown";
+  reasons: string[];
+  matched: string[];
+  missing_fields: string[];
+  needs_rule_extraction: boolean;
+  source_url: string;
+  fetched_at: string;
+}
+
+export interface InterviewReview {
+  feedback: { area: string; quote: string; guidance: string }[];
+  follow_up: string;
+  word_count: number;
+  star: Record<string, boolean>;
+  question_source_url: string;
+}
+
+export interface PrepResponse {
+  interview_date: string;
+  notice_source_url: string;
+  days: { day: number; focus: string; hours: number }[];
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
@@ -217,4 +265,45 @@ export const api = {
     live?: boolean;
   }) => post<MatchResponse>("/match", req),
   evidence: () => get<EvidenceResponse>("/evidence"),
+  assessNext: (req: {
+    state?: AssessState;
+    skill_id?: string;
+    persona?: Persona;
+  }) =>
+    post<{ done: boolean; state: AssessState; item: AssessItem | null }>(
+      "/assess/next",
+      req,
+    ),
+  assessAnswer: (req: {
+    state: AssessState;
+    item_id: string;
+    given_answer: string;
+    persona?: Persona;
+  }) =>
+    post<{ correct: boolean; state: AssessState; done: boolean }>(
+      "/assess/answer",
+      req,
+    ),
+  schemes: (query: string) =>
+    get<{ schemes: Scheme[]; count: number; error: string | null }>(
+      `/schemes?q=${encodeURIComponent(query)}&limit=10`,
+    ),
+  eligibility: (req: {
+    source_url: string;
+    fetched_at: string;
+    facts?: Record<string, unknown>;
+    persona?: Persona;
+  }) => post<EligibilityResponse>("/schemes/eligibility", req),
+  interviewReview: (req: {
+    question: string;
+    transcript: string;
+    question_source_url: string;
+    persona?: Persona;
+  }) => post<InterviewReview>("/interview/review", req),
+  prep: (req: {
+    interview_date: string;
+    focus: string[];
+    notice_source_url: string;
+    persona?: Persona;
+  }) => post<PrepResponse>("/prep", req),
 };

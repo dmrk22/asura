@@ -13,9 +13,13 @@ which persona asked so `/evidence` can show that both routes hit one engine.
 
 from __future__ import annotations
 
-from typing import Literal
+from datetime import UTC, date, datetime
+from typing import Any, Literal
 
 from daari_core import assess as assess_engine
+from daari_core import eligibility as eligibility_engine
+from daari_core import interview as interview_engine
+from daari_core import prep as prep_engine
 from daari_core import roadmap as roadmap_engine
 from daari_core import scam as scam_engine
 from daari_core import telemetry
@@ -85,6 +89,30 @@ class AssessAnswerRequest(BaseModel):
     state: AssessStateModel
     item_id: str
     given_answer: str
+    persona: Literal["student", "rural"] = "student"
+
+
+class EligibilityRequest(BaseModel):
+    """A reviewed, source-tied eligibility AST is evaluated only by core."""
+
+    rules: dict[str, Any] | None = None
+    facts: dict[str, Any] = Field(default_factory=dict)
+    source_url: str
+    fetched_at: str
+    persona: Literal["student", "rural"] = "rural"
+
+
+class InterviewRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2_000)
+    transcript: str = Field(min_length=1, max_length=20_000)
+    question_source_url: str = Field(min_length=1, max_length=2_000)
+    persona: Literal["student", "rural"] = "student"
+
+
+class PrepRequest(BaseModel):
+    interview_date: date
+    focus: list[str] = Field(default_factory=list, max_length=12)
+    notice_source_url: str = Field(min_length=1, max_length=2_000)
     persona: Literal["student", "rural"] = "student"
 
 
@@ -435,6 +463,35 @@ async def schemes_live(q: str = "", limit: int = 10) -> dict:
     return {"schemes": records, "count": len(records), "error": error}
 
 
+@router.post("/schemes/eligibility")
+def scheme_eligibility(req: EligibilityRequest) -> dict:
+    """Evaluate reviewed scheme predicates; never let the model decide."""
+    telemetry.count(req.persona, "eligibility")
+    if req.rules is None:
+        return {
+            "value": "unknown",
+            "reasons": [],
+            "matched": [],
+            "missing_fields": [],
+            "needs_rule_extraction": True,
+            "source_url": req.source_url,
+            "fetched_at": req.fetched_at,
+        }
+    try:
+        verdict = eligibility_engine.evaluate(req.rules, req.facts)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(422, f"invalid eligibility rules: {type(exc).__name__}") from exc
+    return {
+        "value": verdict.value,
+        "reasons": list(verdict.reasons),
+        "matched": list(verdict.matched),
+        "missing_fields": list(verdict.missing_fields),
+        "needs_rule_extraction": False,
+        "source_url": req.source_url,
+        "fetched_at": req.fetched_at,
+    }
+
+
 @router.get("/geocode")
 async def geocode(q: str) -> dict:
     """Live Nominatim geocode for one place name. Never crashes when
@@ -538,4 +595,39 @@ def assess_answer(req: AssessAnswerRequest) -> dict:
         "correct": correct,
         "state": _state_to_json(new_state),
         "done": assess_engine.should_stop(new_state),
+    }
+
+
+@router.post("/interview/review")
+def interview_review(req: InterviewRequest) -> dict:
+    """Feedback over the candidate's own words, every item anchored by a quote."""
+    try:
+        review = interview_engine.review(req.question, req.transcript)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    telemetry.count(req.persona, "interview_review")
+    return {
+        "feedback": [
+            {"area": item.area, "quote": item.quote, "guidance": item.guidance}
+            for item in review.feedback
+        ],
+        "follow_up": review.follow_up,
+        "word_count": review.word_count,
+        "star": review.star,
+        "question_source_url": req.question_source_url,
+    }
+
+
+@router.post("/prep")
+def placement_prep(req: PrepRequest) -> dict:
+    """Turn a user-confirmed notice date into a deterministic prep calendar."""
+    try:
+        days = prep_engine.schedule(req.interview_date, datetime.now(UTC).date(), tuple(req.focus))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    telemetry.count(req.persona, "prep")
+    return {
+        "interview_date": req.interview_date.isoformat(),
+        "notice_source_url": req.notice_source_url,
+        "days": [{"day": item.day, "focus": item.focus, "hours": item.hours} for item in days],
     }
