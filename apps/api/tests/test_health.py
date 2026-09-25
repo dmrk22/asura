@@ -3,6 +3,9 @@ every outbound probe raises, and Settings never leaks a secret through
 repr/str.
 """
 
+from typing import cast
+
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -119,7 +122,9 @@ async def test_ollama_with_no_model_pulled_is_skipped_not_ok():
     Reporting `ok` there promises the provider chain a third link that fails on
     its first real call.
     """
-    probe = await main_module._probe_ollama(_FakeClient(_FakeTagsResponse({"models": []})))
+    probe = await main_module._probe_ollama(
+        cast(httpx.AsyncClient, _FakeClient(_FakeTagsResponse({"models": []})))
+    )
     assert probe["status"] == "skipped"
     assert probe["detail"] == "model_not_pulled"
 
@@ -127,7 +132,9 @@ async def test_ollama_with_no_model_pulled_is_skipped_not_ok():
 @pytest.mark.asyncio
 async def test_ollama_with_the_configured_model_pulled_is_ok():
     payload = {"models": [{"name": f"{main_module.OLLAMA_MODEL}"}]}
-    probe = await main_module._probe_ollama(_FakeClient(_FakeTagsResponse(payload)))
+    probe = await main_module._probe_ollama(
+        cast(httpx.AsyncClient, _FakeClient(_FakeTagsResponse(payload)))
+    )
     assert probe["status"] == "ok"
     assert probe["detail"] == "model_present"
 
@@ -136,5 +143,7 @@ async def test_ollama_with_the_configured_model_pulled_is_ok():
 async def test_ollama_accepts_a_bare_tag_pull_of_the_same_model():
     """`ollama pull llama3.1` lands as `llama3.1:latest` — still the usable model."""
     payload = {"models": [{"name": "llama3.1:latest"}]}
-    probe = await main_module._probe_ollama(_FakeClient(_FakeTagsResponse(payload)))
+    probe = await main_module._probe_ollama(
+        cast(httpx.AsyncClient, _FakeClient(_FakeTagsResponse(payload)))
+    )
     assert probe["status"] == "ok"

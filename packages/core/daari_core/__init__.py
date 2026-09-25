@@ -6,21 +6,3 @@ assess/scam/interview_metrics. Engine modules (match.py, roadmap.py, ...) arrive
 """
 
 __version__ = "0.1.0"
-from . import (
-    assess,
-    eligibility,
-    geo,
-    graph,
-    interview,
-    match,
-    prep,
-    profile,
-    roadmap,
-    scam,
-    taxonomy,
-    telemetry,
-)
-
-__all__ = [
-    "assess", "eligibility", "geo", "graph", "interview", "match", "prep", "profile", "roadmap", "scam", "taxonomy", "telemetry"
-]

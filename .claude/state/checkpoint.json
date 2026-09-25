@@ -1,50 +1,9 @@
 {
-  "task_id": "retire-demo-real-stack-deploy",
-  "phase": "GO1+GO2 done; deployed to Vercel",
-  "status": "real stack (scam/eligibility/geo/assess + live fetchers + LLM chain + real web screens) built, tested, retired the HTML demo, deployed to Vercel and live-verified",
-  "project": "DAARI (Team ASURA), repo asura",
-  "spec_version": "DAARI_BUILD_PLAN.md v6, 18 Sep 2026",
-  "updated": "2026-09-18",
-  "plan_file": "~/.claude/plans/now-keep-the-demo-foamy-sifakis.md",
-  "files_touched": [
-    "packages/core/daari_core/{scam,eligibility,geo,assess}.py + tests (new)",
-    "apps/api/daari/{http,items_loader,skills_map,sources_config}.py, fetchers/{remotive,adzuna,myscheme,nominatim}.py, llm/chain.py (new)",
-    "apps/api/daari/routes.py (+scam on every card, +/assess/next, +/assess/answer, +/leads/live, +/schemes, +/geocode, +live flag on /match)",
-    "apps/api/tests/{test_fetchers,test_skills_map,test_go2_wiring}.py (new)",
-    "data/sources.yaml (new)",
-    "apps/web/app/[locale]/{onboard,path,leads,evidence}/ (new screens), components/{AppHeader,MicButton,RoadmapDiff,ScamBadge,SkillGraph}.tsx (new), lib/ (new)",
-    "apps/web/styles/tokens.css, app/globals.css (dark mode removed, light-only)",
-    "apps/web/messages/{en,te,hi}.json (+leads.liveToggle, +leads.seedNoListing, i18n parity kept)",
-    ".claude/launch.json (repointed at real api/web, demo retired)",
-    "docs/STATE.md, docs/DECISIONS.md (D21-D23), docs/RUNBOOK.md (rewritten)"
-  ],
-  "commands_run": [
-    { "cmd": "packages/core: uv run pytest -q && ruff check .", "exit": 0, "evidence": "125 passed, 1 skipped, ruff clean" },
-    { "cmd": "apps/api: uv run pytest -q && ruff check .", "exit": 0, "evidence": "48 passed, ruff clean" },
-    { "cmd": "apps/web: pnpm typecheck && pnpm lint && pnpm test && pnpm build", "exit": 0, "evidence": "all green, i18n + tokens tests pass" },
-    { "cmd": "killed old demo processes on :3000/:8000 (ps -p confirmed identity first)", "exit": 0, "evidence": "3000 and 8000 free" },
-    { "cmd": "vercel deploy --prod (daari-api, from a scratchpad-staged minimal copy)", "exit": 0, "evidence": "https://daari-api.vercel.app live, /taxonomy /roadmap /match /leads/live /schemes /geocode /assess all 200 with real data" },
-    { "cmd": "vercel deploy --prod --build-env NEXT_PUBLIC_API_URL=https://daari-api.vercel.app (daari-web, apps/web in place)", "exit": 0, "evidence": "https://daari-web.vercel.app live, /onboard /path /leads /evidence + /te all 200, screenshots match local pixel-for-pixel numbers" }
-  ],
-  "evidence": {
-    "scam_shield_live_catch": "a real Remotive listing scored 0.40/check with quoted reasons pay_out_of_band:\"25\", urgency_no_interview:\"unlimited earning\" — both locally and on the deployed API",
-    "cat_live_run": "6-item loop on sql_querying: SE 1.4142 -> 0.7680, hard-stopped at item 6",
-    "live_match": "POST /match live=true -> live_count:8, seed_count:10 merged and ranked by one unmodified daari_core.match",
-    "deployed_numbers_match_local": "Priya -> Data Analyst 310h/31wk/10 steps, identical on daari-web.vercel.app and localhost"
-  },
-  "blockers": [
-    "Deployed daari-api has no GEMINI_API_KEY/GROQ_API_KEY/ADZUNA_APP_ID/ADZUNA_APP_KEY set (user must add via Vercel dashboard, Claude cannot read .env) — degrades gracefully (no_api_key/skipped), not a crash.",
-    "No /assess or /schemes UI screens yet — routes are real, tested, live-verified by curl; not wrapped in a screen. Biggest remaining gap.",
-    "schemes/extract_rules.py (LLM -> predicate AST for eligibility.evaluate()) not built — cut consciously, D23."
-  ],
-  "human_todo": [
-    "Add GEMINI_API_KEY, GROQ_API_KEY, ADZUNA_APP_ID, ADZUNA_APP_KEY to the daari-api Vercel project (Settings > Environment Variables), then ask for a redeploy",
-    "Decide whether to keep both localhost dev servers and the Vercel deploy running, or retire one",
-    "Merge/PR the pushed branch into main when ready"
-  ],
-  "next_action": "If continuing: build /assess and /schemes UI screens, or extract_rules.py for live eligibility. Otherwise this phase is complete and deployed.",
-  "deferred_to_go": [
-    "Voice/ASR/TTS, /ws/voice, interview coach + feedback guard, prep-from-notice, agent trace drawer UI, grounding verifier's LLM pass, SerpAPI, demand.py (PMI from live listings) — unchanged, still not built.",
-    "demo/ directory left on disk, unserved — deleting it wasn't taken as this session's risk."
-  ]
+  "project": "DAARI (Team ASURA)",
+  "spec": "DAARI_BUILD_PLAN.md v6",
+  "updated": "2026-09-25",
+  "phase": "P1-skeleton",
+  "status": "code-checks-green-live-health-pending",
+  "decision": "D17: restored current tree from P1 commit 6539b31; later demo work remains only in Git history",
+  "next_action": "Run the live P1 health gate with Docker, then implement P2 in the master build plan with acceptance tests first."
 }

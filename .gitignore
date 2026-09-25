@@ -8,6 +8,7 @@ __pycache__/
 .ruff_cache/
 .cache/
 node_modules/
+.pnpm-store/
 .next/
 out/
 dist/
@@ -15,10 +16,6 @@ coverage/
 playwright-report/
 test-results/
 apps/web/.vercel
-# Demo audio: the transcripts are the eval, the audio is the demo.
-evals/voice/clips/*
-!evals/voice/clips/.gitkeep
-# Playwright MCP scratch output (screenshots we keep live in apps/web/tests/screenshots/)
 .playwright-mcp/
 # Local project copies and generated report artifacts.
 /asura-project-fc4deba*/

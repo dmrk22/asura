@@ -3,13 +3,10 @@ import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { AppHeader } from "@/components/AppHeader";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
-// Committed font files keep production builds and the unplugged demo free of
-// external Google Fonts requests. `next/font/local` still optimizes and
-// self-hosts them in the built application.
 const geist = localFont({
   src: "../../fonts/geist-latin.woff2",
   variable: "--font-geist",
@@ -48,7 +45,10 @@ export function generateStaticParams() {
 export default async function LocaleLayout({
   children,
   params,
-}: LayoutProps<"/[locale]">) {
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
@@ -63,7 +63,9 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-full flex-col bg-bone text-ink">
         <NextIntlClientProvider messages={messages}>
-          <AppHeader />
+          <header className="flex items-center justify-end border-graphite/20 border-b px-6 py-5">
+            <LanguageToggle />
+          </header>
           {children}
         </NextIntlClientProvider>
       </body>

@@ -20,10 +20,8 @@ from typing import Any
 import httpx
 import redis.asyncio as redis_async
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from daari import routes as engine_routes
 from daari.config import settings
 from daari.db import engine
 
@@ -64,19 +62,6 @@ def _git_sha() -> str:
 _SHA = _git_sha()
 
 app = FastAPI(title="daari-api")
-
-# The web lane and the offline demo frontend both run on a different origin
-# than the API. Origins are read from settings rather than "*" so a deployed
-# build cannot be called from anywhere.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
-
-app.include_router(engine_routes.router)
 
 
 async def _safe(coro: Coroutine[Any, Any, dict]) -> dict:

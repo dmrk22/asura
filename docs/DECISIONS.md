@@ -131,31 +131,7 @@ The probe now parses the tag list and reports `skipped: model_not_pulled` unless
 
 The general rule, since `/health` is what the P1 gate and the pitch both rely on: **a probe reports the capability, not the connection.** Reachable, authenticated and usable are three different facts.
 
-## D19 · 2026-09-18 · A relevance floor on the matcher; §7.2's weights left alone
-The §7.2 score is additive: `0.5*coverage - 0.25*gap + 0.15*fit + 0.10*demand`. With a real profile and the seed listings that let a listing the learner matches **nothing** of head the results — Priya's top match was "Retail Sales Associate" at `coverage = 0.00`, winning on `constraint_fit = 1.0` (same city) plus a small `gap_cost` (short, cheap role). The arithmetic is right; presenting it as the top *match* is not, and it is the first thing a judge would poke.
+## D17 · 2026-09-25 · Restart from P1 on the plan's phase order
+At the user's request, the current tracked tree was restored from the verified P1 commit `6539b31`. This removes the standalone demo and the later ad hoc product routes, engine modules, fetchers, data, and screenshots from the branch tip. The old commits remain in Git history for reference; this is a forward cleanup commit, with no history rewrite. Untracked project export copies and overview artifacts were moved out of the repository to `/private/tmp/asura-pre-p1-artifacts-2026-09-25/`.
 
-Rejected: re-weighting the formula, or making `fit`/`demand` multiplicative. Both change a number the plan publishes and would need re-justifying on stage.
-
-**Decided:** an ordering rule in `daari_core.match.match()` — sort by `(coverage <= 0, -score, id)`. A zero-coverage candidate never outranks a positive-coverage one; within each block, score decides. Every published weight and every returned component is byte-identical to before; only the order changes. Three regression tests pin it, including one asserting the §7.2 arithmetic still holds exactly.
-
-Zero-coverage candidates are **demoted, not hidden** — a learner with no matches still deserves to see the closest attainable work.
-
-**Residual, honest:** Priya's top match is now "Store Cashier" at 25 % coverage (she has the numeracy it needs). That is truthful but reads oddly for a data-analyst persona. The real cause is the seed listings' `required_skills` levels being copied from each skill node's own level rather than being set per listing. Fix that in the data lane, not in the scorer.
-
-## D20 · 2026-09-18 · The remote was 9 commits behind; nothing had ever been pushed
-GitHub still showed the previous NADI project because `main` had never been pushed — `/setup` committed locally and deliberately did not push (D1 recorded the commit, not a push). `git rev-list --left-right --count origin/main...HEAD` read `0 9`. Pushed on the user's explicit instruction after checking that `.env` is untracked and no key-shaped literal exists in any tracked file. `gh api .../git/trees/main?recursive=1` filtered for `nadi` now returns empty.
-
-**Rule going forward:** `/setup` and `/go` push after a green gate. A local-only commit is invisible to a teammate and to the judge reading the repo.
-
-## D21 · 2026-09-18 · Retired the standalone HTML demo; the real Next app is now the product
-`demo/frontend/index.html` (565 lines, inline CSS/JS) and `demo/backend/` (a second FastAPI app with an incompatible route shape, never importing `daari_core`) were what a judge would actually have seen — squatting :3000/:8000 — while the real `apps/web` was a one-page wordmark and the real `apps/api` had no UI at all.
-
-**Decided:** killed both demo processes, repointed `.claude/launch.json` at `daari.main:app`/`pnpm dev`, built out `apps/web` into the real product (`/onboard`, `/path`, `/leads`, `/evidence`) against the real API. `demo/` stays on disk, unserved — deleting the directory wasn't this hour's risk to take. Verified: both retired PIDs confirmed to be the old demo (`ps -p`) before killing, not guessed from the port number alone.
-
-## D22 · 2026-09-18 · Verified live: Groq and Remotive need a browser User-Agent
-`urllib`'s and (initially) plain `httpx`'s default User-Agent got a Cloudflare `error code: 1010` from both `api.groq.com` and `remotive.com`, even with a valid key. A browser UA string on every outbound client fixed it. Not documented anywhere before this session; `apps/api/daari/http.py`'s shared client now sets one by default.
-
-## D23 · 2026-09-18 · Adzuna key fixed mid-session; eligibility's LLM extraction pipeline deliberately not built
-`ADZUNA_APP_KEY` was 401 (truncated paste, 31 vs 32 chars per D-blocker-1). Human re-pasted it during this session; `/health` flipped to `adzuna: ok` and `GET /leads/live` started returning real Adzuna listings mid-build — confirmed by the API builder's live smoke.
-
-**Cut, consciously:** `schemes/extract_rules.py` (myscheme text → LLM predicate-AST → `daari_core.eligibility.evaluate()`) was not built this hour. `eligibility.py` itself is real, tested, and three-valued-correct; it simply has no live scheme feeding it yet, and neither `/assess` nor `/schemes` has a UI screen. Logged rather than hidden, per CLAUDE.md non-negotiable 9 (ship what passes, log what's missing, move on) — this is the largest remaining gap between what's claimed and what's on screen.
+P1 keeps locally hosted font files so the Next build is independent of Google Fonts. Its build script uses webpack because Turbopack stalled on this host. The API CI now declares Pyright, which the old workflow invoked without installing, and the premature eval job that silently passed when `evals/run.py` was absent was removed. Phase status and verification evidence live in `docs/STATE.md`. Resume with P2 only after the P1 gate is green.

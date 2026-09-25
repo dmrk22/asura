@@ -17,18 +17,17 @@ dependencies = [
     # NOTE: spec asked for redis==8.1.0, but arq==0.28.0 (latest on PyPI) hard-pins
     # `redis[hiredis]<6,>=4.2.0` — the two pins are mutually unsatisfiable, uv's
     # resolver confirms it. Pinned to 5.3.1 (latest release inside arq's window)
-    # so `uv sync` actually resolves. Needs a docs/DECISIONS.md entry (out of this
-    # builder's scope — packages/core and apps/api only) recording the override.
+    # so `uv sync` actually resolves. See docs/DECISIONS.md D15.
     "redis==5.3.1",
     "pgvector==0.5.0",
     "greenlet==3.5.6",
     "edge-tts==7.2.8",
-    "pyyaml==6.0.3",
     "daari-core",
 ]
 
 [dependency-groups]
 dev = [
+    "pyright==1.1.414",
     "pytest==9.1.1",
     "pytest-asyncio==1.4.0",
     "ruff==0.16.8",
