@@ -1,8 +1,8 @@
 # data/taxonomy/skills.yaml — DAARI skill taxonomy seed (P2, task T0).
 #
 # ~300 nodes at full scale (DAARI_BUILD_PLAN.md §7.1, §9); this is the P2 seed
-# (D17, docs/DECISIONS.md): ~24 nodes covering the two demo roles
-# (Priya -> Data Analyst, Ravi -> Delivery Executive) plus their prerequisite
+# (D17, docs/DECISIONS.md): ~24 nodes covering analytics and delivery roles
+# plus their prerequisite
 # chains. Growth to the full bank is P3+ data-lane work.
 #
 # Schema per node (data.md): {id, label_en, label_te, label_hi, aliases[],

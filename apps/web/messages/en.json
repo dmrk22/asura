@@ -2,7 +2,7 @@
   "brand": {
     "wordmark": "DAARI",
     "status": "DAARI · online",
-    "openDemo": "Open demo"
+    "openDemo": "Get started"
   },
   "nav": {
     "languageLabel": "Language",
@@ -20,13 +20,19 @@
     "prep": "Prep"
   },
   "onboard": {
-    "title": "Who are you today?",
-    "subtitle": "Pick a synthetic persona to see the same engine route two different people.",
-    "personaLabel": "Persona",
-    "loadError": "Could not load personas from the engine.",
-    "synthetic": "synthetic",
+    "title": "Start your path",
+    "subtitle": "Tell us where you want to go. Your profile starts empty and is built from here.",
+    "loadError": "Could not load career goals from the engine.",
+    "pathType": "Path type",
+    "studentPath": "Campus or student",
+    "workPath": "Work-first",
     "goal": "Goal",
+    "goalPlaceholder": "Choose a goal",
+    "state": "State or union territory",
+    "statePlaceholder": "Choose a state or union territory",
     "district": "District",
+    "districtPlaceholder": "Choose a district",
+    "districtRequiresState": "Choose a state first",
     "language": "Language",
     "constraints": "Constraints",
     "constraintsPlaceholder": "e.g. weekends only, no travel",
@@ -38,7 +44,7 @@
     "totalHours": "total hours",
     "weeksAt10": "weeks @ 10h/wk",
     "loading": "Loading roadmap…",
-    "loadError": "Could not load the roadmap. Go back and pick a persona.",
+    "loadError": "Could not load the roadmap. Go back and choose a goal.",
     "actionError": "The engine did not respond. Try again.",
     "steps": "Steps",
     "goalReached": "Goal already reached — every required skill is held.",
@@ -51,13 +57,14 @@
   "leads": {
     "title": "Leads",
     "loadError": "Could not load leads from the engine.",
-    "empty": "No matches yet — learn a skill on /path and check back.",
+    "empty": "No listings found. Turn on live search to look for current opportunities.",
+    "emptyLive": "No live listings found for this search. Check the source errors above or try again later.",
     "components": "Score breakdown",
     "source": "source",
     "fetchedAt": "fetched_at",
     "viewListing": "View listing",
-    "liveToggle": "Include live listings (Adzuna / Remotive)",
-    "seedNoListing": "seed listing — no live posting"
+    "liveToggle": "Search live listings (Adzuna / Remotive)",
+    "noListing": "No source link available"
   },
   "evidence": {
     "title": "Evidence",
@@ -74,6 +81,7 @@
     "submit": "Check answer",
     "next": "Next question",
     "complete": "Assessment complete",
+    "noItems": "No assessment questions are available yet.",
     "ability": "ability estimate",
     "error": "Could not continue the assessment."
   },

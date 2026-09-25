@@ -1,4 +1,4 @@
-"""daari.items_loader — CAT item bank, loaded from committed data.
+"""daari.items_loader — optional CAT item bank, loaded from committed data.
 
 Like `taxonomy_loader` and `leads`, all I/O lives here; `daari_core.assess`
 never touches YAML or the network (core.md).
@@ -19,11 +19,11 @@ ITEMS_FILE = REPO_ROOT / "data" / "items" / "items.yaml"
 @lru_cache(maxsize=1)
 def get_item_bank() -> tuple[Item, ...]:
     if not ITEMS_FILE.exists():
-        raise FileNotFoundError(f"item bank missing: {ITEMS_FILE}")
+        return ()
     with ITEMS_FILE.open("r", encoding="utf-8") as f:
         rows = yaml.safe_load(f)
     if not rows:
-        raise ValueError(f"item bank is empty: {ITEMS_FILE}")
+        return ()
     items = tuple(
         Item(
             id=row["id"],

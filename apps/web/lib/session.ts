@@ -24,7 +24,17 @@ export function saveOnboard(state: OnboardState) {
 export function loadOnboard(): OnboardState | null {
   try {
     const raw = sessionStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as OnboardState) : null;
+    const state = raw ? (JSON.parse(raw) as OnboardState) : null;
+    // Discard the retired demo profiles from existing browser sessions.
+    if (
+      state &&
+      state.personaId !== "new-profile" &&
+      state.personaId !== "voice"
+    ) {
+      sessionStorage.removeItem(KEY);
+      return null;
+    }
+    return state;
   } catch {
     return null;
   }

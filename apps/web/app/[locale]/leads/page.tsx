@@ -92,7 +92,9 @@ export default function LeadsPage() {
       {error && <p className="mt-4 text-signal text-sm">{error}</p>}
 
       {matches && matches.length === 0 && (
-        <p className="mt-8 text-graphite text-sm">{t("empty")}</p>
+        <p className="mt-8 text-graphite text-sm">
+          {t(live ? "emptyLive" : "empty")}
+        </p>
       )}
 
       <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -148,11 +150,7 @@ export default function LeadsPage() {
                   .replace("T", " ")}
               </span>
               {(() => {
-                // Seed listings (rules/safety.md guard 2) carry a stamped
-                // placeholder source_url that doesn't resolve to a real
-                // posting — a live-looking link to nowhere is worse than no
-                // link. Only a live-fetched card gets a real, clickable one.
-                const href = c.is_live ? safeHref(c.source_url) : undefined;
+                const href = safeHref(c.source_url);
                 return href ? (
                   <a
                     href={href}
@@ -167,7 +165,7 @@ export default function LeadsPage() {
                     className="whitespace-nowrap text-[10.5px] text-graphite"
                     title={c.source_url}
                   >
-                    {t("seedNoListing")}
+                    {t("noListing")}
                   </span>
                 );
               })()}

@@ -11,6 +11,7 @@ export default function AssessPage() {
   const [item, setItem] = useState<AssessItem | null>(null);
   const [answer, setAnswer] = useState("");
   const [done, setDone] = useState(false);
+  const [available, setAvailable] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (nextState?: AssessState) => {
@@ -22,6 +23,7 @@ export default function AssessPage() {
     setState(response.state);
     setItem(response.item);
     setDone(response.done);
+    setAvailable(response.available);
   }, []);
 
   useEffect(() => {
@@ -52,14 +54,18 @@ export default function AssessPage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10 sm:px-16">
       <h1 className="font-display text-4xl italic">{t("title")}</h1>
       <p className="mt-2 text-graphite">{t("subtitle")}</p>
-      {state && (
+      {state && available && (
         <p className="mt-6 font-mono text-sm tabular-nums">
           {t("ability")}: {state.theta.toFixed(2)} · SE {state.se.toFixed(2)} ·{" "}
           {state.answered.length}/6
         </p>
       )}
       {error && <p className="mt-4 text-signal text-sm">{error}</p>}
-      {done ? (
+      {!available ? (
+        <section className="mt-8 rounded-md border border-graphite/20 p-5">
+          <h2 className="font-display text-2xl italic">{t("noItems")}</h2>
+        </section>
+      ) : done ? (
         <section className="mt-8 rounded-md border border-sage/50 p-5">
           <h2 className="font-display text-2xl italic">{t("complete")}</h2>
         </section>

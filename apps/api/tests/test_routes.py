@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from daari.main import app
 
-PRIYA = {
+BASELINE_SKILLS = {
     "spoken_english": 3,
     "basic_numeracy": 3,
     "digital_literacy": 3,
@@ -26,7 +26,7 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-# --- taxonomy / personas -----------------------------------------------
+# --- taxonomy / empty profile store -------------------------------------
 
 
 def test_taxonomy_returns_the_real_seed(client: TestClient):
@@ -57,11 +57,9 @@ def test_every_skill_ships_a_source_and_a_telugu_label(client: TestClient):
         assert isinstance(skill["aliases"], list), f"{skill['id']} has no aliases list"
 
 
-def test_personas_are_flagged_synthetic(client: TestClient):
+def test_personas_starts_empty(client: TestClient):
     body = client.get("/personas").json()
-    ids = {p["id"] for p in body["personas"]}
-    assert {"ravi", "priya", "blank"} <= ids
-    assert all(p["synthetic"] for p in body["personas"])
+    assert body == {"personas": []}
 
 
 # --- roadmap ------------------------------------------------------------
@@ -92,10 +90,10 @@ def test_roadmap_rejects_an_out_of_range_level(client: TestClient):
     assert r.status_code == 422
 
 
-def test_priya_has_a_shorter_path_than_a_blank_profile(client: TestClient):
+def test_held_skills_shorten_a_path(client: TestClient):
     blank = client.post("/roadmap", json={"held": {}, "goal": "data_analyst"}).json()["path"]
-    priya = client.post("/roadmap", json={"held": PRIYA, "goal": "data_analyst"}).json()["path"]
-    assert priya["total_hours"] < blank["total_hours"]
+    baseline = client.post("/roadmap", json={"held": BASELINE_SKILLS, "goal": "data_analyst"}).json()["path"]
+    assert baseline["total_hours"] < blank["total_hours"]
 
 
 # --- learn (the Before | After beat) ------------------------------------
@@ -104,7 +102,7 @@ def test_priya_has_a_shorter_path_than_a_blank_profile(client: TestClient):
 def test_learning_sql_shortens_the_path_and_reports_a_learner_diff(client: TestClient):
     r = client.post(
         "/roadmap/learn",
-        json={"held": PRIYA, "goal": "data_analyst", "skill": "sql_querying", "level": 5},
+        json={"held": BASELINE_SKILLS, "goal": "data_analyst", "skill": "sql_querying", "level": 5},
     )
     assert r.status_code == 200
     body = r.json()
@@ -176,73 +174,19 @@ def test_shock_cannot_put_a_skill_before_its_prerequisites(client: TestClient):
 # --- match --------------------------------------------------------------
 
 
-def test_match_ranks_and_returns_components(client: TestClient):
-    r = client.post("/match", json={"held": PRIYA, "districts": ["Vijayawada"]})
+def test_match_starts_with_no_locally_saved_leads(client: TestClient):
+    r = client.post("/match", json={"held": BASELINE_SKILLS, "districts": ["Vijayawada"]})
     assert r.status_code == 200
     body = r.json()
-
-    assert body["count"] == 10
-    for m in body["matches"]:
-        assert set(m["components"]) == {"coverage", "gap_cost", "constraint_fit", "demand_bonus"}
-        assert m["reasons"]
-
-    # Relevance floor, then score. Every candidate the learner part-matches comes
-    # before every candidate they match nothing of, and each block is ordered by
-    # score. A nearby 0%-coverage listing must never head the list.
-    coverages = [m["components"]["coverage"] for m in body["matches"]]
-    positive = [i for i, c in enumerate(coverages) if c > 0]
-    zero = [i for i, c in enumerate(coverages) if c == 0]
-    assert positive and zero, "this fixture should exercise both blocks"
-    assert max(positive) < min(zero), f"a 0%-coverage listing outranked a real match: {coverages}"
-
-    for block in (positive, zero):
-        scores = [body["matches"][i]["match_score"] for i in block]
-        assert scores == sorted(scores, reverse=True)
+    assert body["matches"] == []
+    assert body["count"] == 0
+    assert body["saved_count"] == 0
 
 
-def test_every_match_carries_provenance_and_is_not_claimed_live(client: TestClient):
-    """rules/safety.md guard 2 — a lead without source and fetched_at never ships."""
-    body = client.post("/match", json={"held": PRIYA}).json()
+def test_empty_match_response_explains_how_to_search_live_leads(client: TestClient):
+    body = client.post("/match", json={"held": BASELINE_SKILLS}).json()
     assert body["live"] is False
-    assert "not a live fetch" in body["provenance_note"]
-    for m in body["matches"]:
-        assert m["source"]
-        assert m["source_url"]
-        assert m["fetched_at"]
-        assert m["is_live"] is False
-
-
-def test_district_preference_changes_the_ranking(client: TestClient):
-    """Naming a district re-ranks, and it does so through `constraint_fit` only —
-    it must not be able to promote a listing the learner matches nothing of past
-    one they do (that is what the relevance floor guards)."""
-    guntur = client.post("/match", json={"held": PRIYA, "districts": ["Guntur"]}).json()
-    vijayawada = client.post("/match", json={"held": PRIYA, "districts": ["Vijayawada"]}).json()
-
-    g_order = [m["id"] for m in guntur["matches"]]
-    v_order = [m["id"] for m in vijayawada["matches"]]
-    assert g_order != v_order, "naming a district must change the ranking"
-
-    for body, district in ((guntur, "Guntur"), (vijayawada, "Vijayawada")):
-        for m in body["matches"]:
-            expected = 1.0 if m["location"] == district else 0.0
-            assert m["components"]["constraint_fit"] == expected
-
-    # The floor holds under every district preference.
-    for body in (guntur, vijayawada):
-        covs = [m["components"]["coverage"] for m in body["matches"]]
-        assert max(i for i, c in enumerate(covs) if c > 0) < min(i for i, c in enumerate(covs) if c == 0)
-
-
-def test_ravi_and_priya_rank_different_jobs_first(client: TestClient):
-    """Two personas, one engine, different answers — because the profiles differ,
-    not because a branch sent them down different code."""
-    priya = client.post("/match", json={"held": PRIYA, "persona": "student"}).json()
-    ravi = client.post(
-        "/match",
-        json={"held": {"two_wheeler_riding": 3}, "persona": "rural", "districts": ["Guntur"]},
-    ).json()
-    assert priya["matches"][0]["id"] != ravi["matches"][0]["id"]
+    assert "0 locally saved listing(s)" in body["provenance_note"]
 
 
 # --- evidence -----------------------------------------------------------
@@ -258,6 +202,7 @@ def test_evidence_counters_move_for_both_personas(client: TestClient):
     assert calls.get("rural", {}).get("roadmap", 0) > 0
     assert body["shared_engine"]["package"] == "daari_core"
     assert body["leads"]["live"] is False
+    assert body["leads"]["count"] == 0
 
 
 def test_eligibility_without_reviewed_rules_is_honest_unknown(client: TestClient):

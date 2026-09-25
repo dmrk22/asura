@@ -3,6 +3,12 @@
 Spec: `DAARI_BUILD_PLAN.md` **v6, 18 Sep 2026**. Build order + cut lines: §13. Repo layout: §6.
 Updated 2026-09-18 by `/setup` (re-run against v6).
 
+**Current behavior (2026-09-25):** Onboarding creates an empty profile with a selected goal,
+state, and district. Bundled demo personas, listings, and assessment items were removed.
+`GET /personas` returns an empty list; `POST /match` starts with zero saved listings and
+reports `saved_count`; `POST /assess/next` returns `available: false` until an item bank is supplied.
+The dated measurements below describe the earlier seed-data setup.
+
 ## Now — the demo is retired, the real stack is the product
 
 **Plan:** `~/.claude/plans/now-keep-the-demo-foamy-sifakis.md`, executed in full (GO 1 + GO 2).

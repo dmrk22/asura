@@ -11,8 +11,8 @@ cd ~/dev/asura/apps/api && uv run uvicorn daari.main:app --port 8000 --reload
 cd ~/dev/asura/apps/web && pnpm dev --port 3000
 ```
 
-Open **http://localhost:3000/en/onboard** — that's the real product now: pick Priya or Ravi,
-then `/path`, `/leads`, `/evidence`. Or open http://localhost:8000/docs for FastAPI's interactive
+Open **http://localhost:3000/en/onboard** — create a profile and choose a goal,
+then visit `/path`, `/leads`, `/evidence`. Or open http://localhost:8000/docs for FastAPI's interactive
 docs with a **Try it out** button on every route — a working backend with no frontend at all.
 
 **There is no more port collision.** The old `demo/backend` (:8000) and `demo/frontend` (:3000,
@@ -40,15 +40,15 @@ key paste) — **fixed this session**, now reports `ok`. `serpapi_budget_left` m
 | Route | What it does |
 |---|---|
 | `GET /taxonomy` | 24 skills, 2 roles, every node with its real source and te/hi labels |
-| `GET /personas` | Ravi (rural), Priya (student), blank — all synthetic |
+| `GET /personas` | Compatibility endpoint; returns an empty list |
 | `POST /roadmap` | `{held, goal, demand?, persona?}` → ordered steps, hours, weeks, `why` per step |
 | `POST /roadmap/learn` | `{held, goal, skill, level}` → **before, after and the diff** (`cause: learner`) |
 | `POST /roadmap/shock` | `{held, goal, skill, weight}` → the Market shock beat (`cause: market`), `requested_weight` vs `applied_weight` |
-| `POST /match` | `{held, districts?, demand?, live?}` → ranked listings, all four score components, a Scam Shield verdict on every card, `live_count`/`seed_count`/`live_errors` when `live: true` |
+| `POST /match` | `{held, districts?, demand?, live?}` → ranked listings with score components and a Scam Shield verdict; returns `live_count`/`saved_count`/`live_errors`. Starts empty unless `live: true` or local listings are supplied. |
 | `GET /leads/live?q=&limit=` | live Remotive + Adzuna listings, mapped through `skills_map`, same card shape as `/match` (incl. `scam`) |
 | `GET /schemes?q=&limit=` | live myscheme.gov.in search, stamped `source`/`source_url`/`fetched_at` |
 | `GET /geocode?q=` | live Nominatim geocode, one place name |
-| `POST /assess/next` | `{state?, skill_id?}` → the next CAT item at max Fisher information, or `done: true`. Never returns the item's answer. |
+| `POST /assess/next` | `{state?, skill_id?}` → `done: true, available: false` while the optional item bank is absent; otherwise the next CAT item without its answer. |
 | `POST /assess/answer` | `{state, item_id, given_answer}` → graded server-side against the item bank, returns updated `theta`/`se` |
 | `GET /evidence` | live per-persona call counters against the one `daari_core` |
 | `GET /health` | the P1 probe board |
@@ -71,7 +71,7 @@ curl -s $API/roadmap/learn -H 'content-type: application/json' \
 curl -s $API/roadmap/shock -H 'content-type: application/json' \
   -d '{"held":{},"goal":"data_analyst","skill":"python_programming","weight":50}'
 
-# 4. Ravi, live listings merged with seed, every card scored for scam
+# 4. Live listings ranked against a sample held-skills request
 curl -s $API/match -H 'content-type: application/json' \
   -d '{"held":{"two_wheeler_riding":3},"districts":["Guntur"],"persona":"rural","live":true}'
 
@@ -84,13 +84,13 @@ curl -s "$API/schemes?q=income&limit=3"
 # 7. Real geocode
 curl -s "$API/geocode?q=Guntur"
 
-# 8. A CAT item — note "answer" is never in the response
+# 8. Assessment availability (currently false without an item bank)
 curl -s $API/assess/next -H 'content-type: application/json' -d '{"skill_id":"sql_querying"}'
 ```
 
 Pipe any of them through `python3 -m json.tool` to read them on stage.
 
-## Numbers you can quote (measured 2026-09-18, not estimated)
+## Historical measurements from 2026-09-18 (the former seed-data setup)
 
 - Priya → Data Analyst: **310 h, 31 weeks at 10 h/wk**, 10 steps.
 - Ravi → Delivery Executive: **150 h, 15 weeks**, 14 steps.
@@ -129,8 +129,8 @@ available to learn. `test_prerequisites_outrank_demand` pins that.
 
 **"Are these real jobs?"** They can be, now — pass `live: true` to `POST /match` or hit
 `GET /leads/live`. Every live card is stamped `is_live: true`, `source: adzuna|remotive`,
-a real `source_url`, a real `fetched_at`. Seed listings still exist and are honestly stamped
-`source: seed`, `is_live: false` — the two are merged, never confused.
+a real `source_url`, and a real `fetched_at`. There are no bundled listings; optional locally
+saved listings are merged when supplied.
 
 **"How does the Scam Shield actually work?"** `daari_core.scam.score()` — six deterministic
 rules over the listing's own text (upfront fees, personal-contact-only, no org, pay out of band,

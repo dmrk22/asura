@@ -43,19 +43,6 @@ export interface Taxonomy {
   counts: { skills: number; roles: number };
 }
 
-export interface PersonaProfile {
-  id: string;
-  name: string;
-  persona: Persona;
-  goal: string;
-  held: Record<string, number>;
-  districts: string[];
-  district: string | null;
-  languages: string[];
-  note: string;
-  synthetic: true;
-}
-
 export interface PathStep {
   skill: string;
   label_en: string;
@@ -153,7 +140,7 @@ export interface MatchResponse {
   count: number;
   live: boolean;
   live_count: number;
-  seed_count: number;
+  saved_count: number;
   live_errors: Record<string, string>;
   provenance_note: string;
   persona: Persona;
@@ -235,7 +222,6 @@ async function get<T>(path: string): Promise<T> {
 
 export const api = {
   taxonomy: () => get<Taxonomy>("/taxonomy"),
-  personas: () => get<{ personas: PersonaProfile[] }>("/personas"),
   roadmap: (req: {
     held: Record<string, number>;
     goal: string;
@@ -271,10 +257,12 @@ export const api = {
     skill_id?: string;
     persona?: Persona;
   }) =>
-    post<{ done: boolean; state: AssessState; item: AssessItem | null }>(
-      "/assess/next",
-      req,
-    ),
+    post<{
+      done: boolean;
+      available: boolean;
+      state: AssessState;
+      item: AssessItem | null;
+    }>("/assess/next", req),
   assessAnswer: (req: {
     state: AssessState;
     item_id: string;

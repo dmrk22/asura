@@ -32,7 +32,7 @@ from daari.fetchers import myscheme as myscheme_fetcher
 from daari.fetchers import nominatim as nominatim_fetcher
 from daari.fetchers import remotive as remotive_fetcher
 from daari.items_loader import get_item_bank
-from daari.leads import get_candidates, get_personas
+from daari.leads import get_candidates
 from daari.skills_map import map_text_to_skills
 from daari.taxonomy_loader import get_taxonomy
 
@@ -253,23 +253,8 @@ def taxonomy() -> dict:
 
 @router.get("/personas")
 def personas() -> dict:
-    return {
-        "personas": [
-            {
-                "id": p.id,
-                "name": p.name,
-                "persona": p.persona,
-                "goal": p.goal,
-                "held": p.held,
-                "districts": list(p.districts),
-                "district": p.district,
-                "languages": list(p.languages),
-                "note": p.note,
-                "synthetic": True,
-            }
-            for p in get_personas().values()
-        ]
-    }
+    """Compatibility response for clients built before profile creation."""
+    return {"personas": []}
 
 
 @router.post("/roadmap")
@@ -361,7 +346,7 @@ async def match_leads(req: MatchRequest) -> dict:
     demand = _clean_demand(req.demand)
     telemetry.count(req.persona, "match")
 
-    seed_candidates = list(get_candidates())
+    saved_candidates = list(get_candidates())
     live_candidates: list[Candidate] = []
     live_errors: dict[str, str] = {}
 
@@ -377,7 +362,7 @@ async def match_leads(req: MatchRequest) -> dict:
             if candidate is not None:
                 live_candidates.append(candidate)
 
-    candidates = seed_candidates + live_candidates
+    candidates = saved_candidates + live_candidates
     results = match(
         get_taxonomy(),
         held=req.held,
@@ -389,13 +374,13 @@ async def match_leads(req: MatchRequest) -> dict:
 
     if req.live:
         provenance_note = (
-            f"{len(live_candidates)} live listing(s) merged with {len(seed_candidates)} seed listing(s). "
+            f"{len(live_candidates)} live listing(s) merged with {len(saved_candidates)} saved listing(s). "
             "Every card keeps its source and fetched_at."
         )
     else:
         provenance_note = (
-            "Seed listings, not a live fetch. Every card keeps its source and fetched_at. "
-            "Pass live=true to merge in Adzuna / Remotive."
+            f"{len(saved_candidates)} locally saved listing(s). "
+            "Enable live results to search Adzuna / Remotive."
         )
 
     return {
@@ -412,7 +397,7 @@ async def match_leads(req: MatchRequest) -> dict:
         "count": len(results),
         "live": req.live,
         "live_count": len(live_candidates),
-        "seed_count": len(seed_candidates),
+        "saved_count": len(saved_candidates),
         "live_errors": live_errors,
         "provenance_note": provenance_note,
         "persona": req.persona,
@@ -553,21 +538,24 @@ def assess_next(req: AssessNextRequest) -> dict:
     telemetry.count(req.persona, "assess")
 
     bank = get_item_bank()
+    if not bank:
+        return {"done": True, "available": False, "state": _state_to_json(state), "item": None}
     if req.skill_id is not None:
         bank = tuple(i for i in bank if i.skill_id == req.skill_id)
         if not bank:
             raise HTTPException(404, f"no items for skill_id {req.skill_id!r}")
 
     if assess_engine.should_stop(state):
-        return {"done": True, "state": _state_to_json(state), "item": None}
+        return {"done": True, "available": True, "state": _state_to_json(state), "item": None}
 
     exclude = frozenset(item_id for item_id, _ in state.answered)
     item = assess_engine.next_item(state, bank, exclude=exclude)
     if item is None:
-        return {"done": True, "state": _state_to_json(state), "item": None}
+        return {"done": True, "available": True, "state": _state_to_json(state), "item": None}
 
     return {
         "done": False,
+        "available": True,
         "state": _state_to_json(state),
         "item": {
             "id": item.id,
